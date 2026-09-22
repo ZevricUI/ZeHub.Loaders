@@ -1,17 +1,21 @@
 -- ============================================================================
--- ZeHub • Black Glass Key System
+-- ZeHub • Secure Access Loader
 -- ============================================================================
--- Features:
--- • Black / transparent glass UI
--- • ZeHub branding
--- • FlowAuth key system
--- • Get Key + automatic clipboard copy
--- • Discord + automatic clipboard copy
--- • Authorization overlay
--- • Connecting / validating / loading states
--- • Success / invalid key / error states
+-- Black Glass UI matching the ZeHub reference design.
+--
+-- FEATURES
+-- • ZeHub black / transparent glass design
+-- • Supported games sidebar
+-- • Rivals / Runaway / Coming Soon
+-- • Get Key page
+-- • Discord page
+-- • FlowAuth integration
+-- • Automatic clipboard copying
+-- • Key authorization screen
+-- • Key verified screen
+-- • Invalid key screen
+-- • Authentication error screen
 -- • Notifications
--- • Supported game selector
 -- • Minimize / restore
 -- • Dragging
 -- • Mobile scaling
@@ -43,64 +47,84 @@ local LOGO_IMAGE =
     "rbxassetid://137776481151936"
 
 -- ============================================================================
--- BLACK / GLASS THEME
+-- FLOWAUTH LOADERS
+-- ============================================================================
+
+local FLOWAUTH_LOADER =
+    "https://flowauth.net/v1/loaders/"
+
+-- ============================================================================
+-- THEME
 -- ============================================================================
 
 local BACKGROUND =
-    Color3.fromRGB(7, 7, 8)
+    Color3.fromRGB(5, 7, 9)
+
+local WINDOW =
+    Color3.fromRGB(8, 10, 12)
 
 local HEADER =
-    Color3.fromRGB(10, 10, 11)
+    Color3.fromRGB(7, 9, 11)
+
+local SIDEBAR =
+    Color3.fromRGB(6, 8, 10)
 
 local PANEL =
-    Color3.fromRGB(11, 11, 12)
+    Color3.fromRGB(8, 10, 12)
 
 local PANEL_2 =
-    Color3.fromRGB(15, 15, 16)
+    Color3.fromRGB(11, 13, 15)
 
 local CARD =
-    Color3.fromRGB(16, 16, 17)
+    Color3.fromRGB(13, 16, 19)
 
 local CARD_HOVER =
-    Color3.fromRGB(24, 24, 25)
+    Color3.fromRGB(19, 22, 25)
 
 local CARD_SELECTED =
-    Color3.fromRGB(27, 27, 29)
+    Color3.fromRGB(23, 26, 30)
 
 local INPUT =
-    Color3.fromRGB(11, 11, 12)
-
-local BORDER =
-    Color3.fromRGB(45, 45, 47)
-
-local BORDER_BRIGHT =
-    Color3.fromRGB(105, 105, 108)
+    Color3.fromRGB(8, 10, 12)
 
 local WHITE =
-    Color3.fromRGB(245, 245, 246)
+    Color3.fromRGB(245, 247, 249)
 
 local TEXT =
-    Color3.fromRGB(220, 220, 223)
+    Color3.fromRGB(221, 225, 229)
 
 local MUTED =
-    Color3.fromRGB(145, 145, 149)
+    Color3.fromRGB(132, 139, 146)
 
 local DARK_MUTED =
-    Color3.fromRGB(82, 82, 86)
+    Color3.fromRGB(76, 83, 90)
+
+local BORDER =
+    Color3.fromRGB(43, 48, 54)
+
+local BORDER_LIGHT =
+    Color3.fromRGB(72, 78, 85)
 
 local SUCCESS =
-    Color3.fromRGB(225, 225, 228)
+    Color3.fromRGB(191, 218, 156)
 
 local ERROR =
-    Color3.fromRGB(205, 205, 208)
+    Color3.fromRGB(235, 92, 103)
 
 local ACCENT =
-    Color3.fromRGB(235, 235, 238)
+    Color3.fromRGB(224, 228, 232)
+
+local ACCENT_DARK =
+    Color3.fromRGB(30, 34, 38)
+
+-- ============================================================================
+-- TRANSPARENCY
+-- ============================================================================
 
 local WINDOW_TRANSPARENCY = 0.08
-local PANEL_TRANSPARENCY = 0.14
-local CARD_TRANSPARENCY = 0.10
-local INPUT_TRANSPARENCY = 0.08
+local PANEL_TRANSPARENCY = 0.10
+local CARD_TRANSPARENCY = 0.08
+local INPUT_TRANSPARENCY = 0.06
 
 -- ============================================================================
 -- SUPPORTED SCRIPTS
@@ -131,8 +155,7 @@ local Scripts = {
 
 }
 
-local selectedScript =
-    Scripts[1]
+local selectedScript = Scripts[1]
 
 -- ============================================================================
 -- REMOVE OLD UI
@@ -193,10 +216,10 @@ local function updateScale()
         camera.ViewportSize
 
     local widthScale =
-        viewport.X / 900
+        viewport.X / 820
 
     local heightScale =
-        viewport.Y / 560
+        viewport.Y / 540
 
     local finalScale =
         math.min(
@@ -207,8 +230,8 @@ local function updateScale()
     scale.Scale =
         math.clamp(
             finalScale,
-            0.72,
-            1.05
+            0.68,
+            1.08
         )
 
 end
@@ -237,7 +260,7 @@ local function rounded(parent, radius)
     corner.CornerRadius =
         UDim.new(
             0,
-            radius or 9
+            radius or 8
         )
 
     corner.Parent =
@@ -247,29 +270,32 @@ local function rounded(parent, radius)
 
 end
 
-local function makeStroke(
+local function stroke(
     parent,
     color,
     transparency,
     thickness
 )
 
-    local s =
+    local uiStroke =
         Instance.new("UIStroke")
 
-    s.Color =
+    uiStroke.Color =
         color or BORDER
 
-    s.Transparency =
+    uiStroke.Transparency =
         transparency or 0.45
 
-    s.Thickness =
+    uiStroke.Thickness =
         thickness or 1
 
-    s.Parent =
+    uiStroke.ApplyStrokeMode =
+        Enum.ApplyStrokeMode.Border
+
+    uiStroke.Parent =
         parent
 
-    return s
+    return uiStroke
 
 end
 
@@ -281,7 +307,7 @@ local function tween(
 
     local info =
         TweenInfo.new(
-            duration or 0.2,
+            duration or 0.18,
             Enum.EasingStyle.Quint,
             Enum.EasingDirection.Out
         )
@@ -313,6 +339,13 @@ local function copyToClipboard(text)
             copied =
                 true
 
+        elseif toclipboard then
+
+            toclipboard(text)
+
+            copied =
+                true
+
         end
 
     end)
@@ -328,8 +361,9 @@ local function openLink(link)
 
     pcall(function()
 
-        GuiService:
-            OpenBrowserWindow(link)
+        GuiService:OpenBrowserWindow(
+            link
+        )
 
         opened =
             true
@@ -337,23 +371,63 @@ local function openLink(link)
     end)
 
     local copied =
-        copyToClipboard(link)
+        copyToClipboard(
+            link
+        )
 
     return opened, copied
 
 end
 
--- ============================================================================
--- FORWARD STATUS FUNCTIONS
--- ============================================================================
+local function makeLabel(
+    parent,
+    text,
+    position,
+    size,
+    textSize,
+    color,
+    font
+)
 
-local setStatusNormal
-local setStatusLoading
-local setStatusSuccess
-local setStatusError
+    local label =
+        Instance.new("TextLabel")
+
+    label.BackgroundTransparency =
+        1
+
+    label.Position =
+        position
+
+    label.Size =
+        size
+
+    label.Text =
+        text
+
+    label.TextColor3 =
+        color or TEXT
+
+    label.Font =
+        font or Enum.Font.Gotham
+
+    label.TextSize =
+        textSize or 10
+
+    label.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    label.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    label.Parent =
+        parent
+
+    return label
+
+end
 
 -- ============================================================================
--- MAIN FRAME
+-- MAIN WINDOW
 -- ============================================================================
 
 local frame =
@@ -364,8 +438,8 @@ frame.Name =
 
 frame.Size =
     UDim2.fromOffset(
-        680,
-        430
+        760,
+        500
     )
 
 frame.Position =
@@ -381,7 +455,7 @@ frame.AnchorPoint =
     )
 
 frame.BackgroundColor3 =
-    BACKGROUND
+    WINDOW
 
 frame.BackgroundTransparency =
     WINDOW_TRANSPARENCY
@@ -397,14 +471,14 @@ frame.Parent =
 
 rounded(
     frame,
-    14
+    12
 )
 
-makeStroke(
+stroke(
     frame,
-    BORDER_BRIGHT,
-    0.45,
-    1.15
+    BORDER_LIGHT,
+    0.42,
+    1
 )
 
 -- ============================================================================
@@ -414,22 +488,19 @@ makeStroke(
 local header =
     Instance.new("Frame")
 
-header.Name =
-    "Header"
-
 header.Size =
     UDim2.new(
         1,
         0,
         0,
-        118
+        72
     )
 
 header.BackgroundColor3 =
     HEADER
 
 header.BackgroundTransparency =
-    0.08
+    0.05
 
 header.BorderSizePixel =
     0
@@ -437,578 +508,182 @@ header.BorderSizePixel =
 header.Parent =
     frame
 
-local headerLine =
+local headerBottom =
     Instance.new("Frame")
 
-headerLine.Size =
+headerBottom.Size =
     UDim2.new(
         1,
-        -36,
+        -32,
         0,
         1
     )
 
-headerLine.Position =
+headerBottom.Position =
     UDim2.fromOffset(
-        18,
-        117
+        16,
+        71
     )
 
-headerLine.BackgroundColor3 =
-    BORDER_BRIGHT
+headerBottom.BackgroundColor3 =
+    BORDER
 
-headerLine.BackgroundTransparency =
-    0.60
+headerBottom.BackgroundTransparency =
+    0.35
 
-headerLine.BorderSizePixel =
+headerBottom.BorderSizePixel =
     0
 
-headerLine.Parent =
+headerBottom.Parent =
     header
 
 -- ============================================================================
--- LOGO
+-- HEADER TITLE
 -- ============================================================================
 
-local logo =
-    Instance.new("ImageLabel")
-
-logo.Name =
-    "ZeHubLogo"
-
-logo.Size =
+makeLabel(
+    header,
+    "ZEHUB",
     UDim2.fromOffset(
-        62,
-        62
-    )
-
-logo.Position =
+        20,
+        13
+    ),
     UDim2.fromOffset(
-        22,
-        20
-    )
-
-logo.BackgroundTransparency =
-    1
-
-logo.Image =
-    LOGO_IMAGE
-
-logo.ScaleType =
-    Enum.ScaleType.Fit
-
-logo.Parent =
-    header
-
--- ============================================================================
--- TITLE
--- ============================================================================
-
-local title =
-    Instance.new("TextLabel")
-
-title.Size =
-    UDim2.fromOffset(
-        300,
-        34
-    )
-
-title.Position =
-    UDim2.fromOffset(
-        92,
-        24
-    )
-
-title.BackgroundTransparency =
-    1
-
-title.Text =
-    "ZEHUB"
-
-title.TextColor3 =
-    WHITE
-
-title.Font =
+        220,
+        28
+    ),
+    20,
+    WHITE,
     Enum.Font.GothamBold
-
-title.TextSize =
-    25
-
-title.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-title.Parent =
-    header
-
-local titleLine =
-    Instance.new("Frame")
-
-titleLine.Size =
-    UDim2.fromOffset(
-        70,
-        2
-    )
-
-titleLine.Position =
-    UDim2.fromOffset(
-        92,
-        61
-    )
-
-titleLine.BackgroundColor3 =
-    ACCENT
-
-titleLine.BackgroundTransparency =
-    0.20
-
-titleLine.BorderSizePixel =
-    0
-
-titleLine.Parent =
-    header
-
-rounded(
-    titleLine,
-    2
 )
 
--- ============================================================================
--- SUBTITLE
--- ============================================================================
-
-local subtitle =
-    Instance.new("TextLabel")
-
-subtitle.Size =
+makeLabel(
+    header,
+    "SCRIPT LOADER  •  SECURE ACCESS",
     UDim2.fromOffset(
-        350,
-        22
-    )
-
-subtitle.Position =
+        20,
+        40
+    ),
     UDim2.fromOffset(
-        92,
-        73
-    )
-
-subtitle.BackgroundTransparency =
-    1
-
-subtitle.Text =
-    "SCRIPT LOADER   •   SECURE ACCESS"
-
-subtitle.TextColor3 =
-    MUTED
-
-subtitle.Font =
+        260,
+        17
+    ),
+    8,
+    MUTED,
     Enum.Font.GothamMedium
-
-subtitle.TextSize =
-    9
-
-subtitle.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-subtitle.Parent =
-    header
-
--- ============================================================================
--- NOTIFICATION SYSTEM
--- ============================================================================
-
-local notificationHolder =
-    Instance.new("Frame")
-
-notificationHolder.Name =
-    "Notifications"
-
-notificationHolder.Size =
-    UDim2.fromOffset(
-        350,
-        300
-    )
-
-notificationHolder.Position =
-    UDim2.new(
-        1,
-        -365,
-        0,
-        22
-    )
-
-notificationHolder.BackgroundTransparency =
-    1
-
-notificationHolder.ZIndex =
-    100
-
-notificationHolder.Parent =
-    gui
-
-local notificationLayout =
-    Instance.new("UIListLayout")
-
-notificationLayout.HorizontalAlignment =
-    Enum.HorizontalAlignment.Right
-
-notificationLayout.VerticalAlignment =
-    Enum.VerticalAlignment.Top
-
-notificationLayout.Padding =
-    UDim.new(
-        0,
-        8
-    )
-
-notificationLayout.Parent =
-    notificationHolder
-
-local function notify(
-    titleText,
-    messageText,
-    duration
 )
-
-    local notification =
-        Instance.new("Frame")
-
-    notification.Name =
-        "Notification"
-
-    notification.Size =
-        UDim2.fromOffset(
-            325,
-            68
-        )
-
-    notification.BackgroundColor3 =
-        PANEL
-
-    notification.BackgroundTransparency =
-        0.04
-
-    notification.BorderSizePixel =
-        0
-
-    notification.ClipsDescendants =
-        true
-
-    notification.ZIndex =
-        100
-
-    notification.Parent =
-        notificationHolder
-
-    rounded(
-        notification,
-        10
-    )
-
-    makeStroke(
-        notification,
-        BORDER_BRIGHT,
-        0.55
-    )
-
-    local indicator =
-        Instance.new("Frame")
-
-    indicator.Size =
-        UDim2.fromOffset(
-            3,
-            40
-        )
-
-    indicator.Position =
-        UDim2.fromOffset(
-            11,
-            14
-        )
-
-    indicator.BackgroundColor3 =
-        ACCENT
-
-    indicator.BorderSizePixel =
-        0
-
-    indicator.ZIndex =
-        101
-
-    indicator.Parent =
-        notification
-
-    rounded(
-        indicator,
-        2
-    )
-
-    local notificationTitle =
-        Instance.new("TextLabel")
-
-    notificationTitle.Size =
-        UDim2.new(
-            1,
-            -42,
-            0,
-            20
-        )
-
-    notificationTitle.Position =
-        UDim2.fromOffset(
-            24,
-            9
-        )
-
-    notificationTitle.BackgroundTransparency =
-        1
-
-    notificationTitle.Text =
-        titleText
-
-    notificationTitle.TextColor3 =
-        WHITE
-
-    notificationTitle.Font =
-        Enum.Font.GothamBold
-
-    notificationTitle.TextSize =
-        10
-
-    notificationTitle.TextXAlignment =
-        Enum.TextXAlignment.Left
-
-    notificationTitle.ZIndex =
-        101
-
-    notificationTitle.Parent =
-        notification
-
-    local message =
-        Instance.new("TextLabel")
-
-    message.Size =
-        UDim2.new(
-            1,
-            -42,
-            0,
-            30
-        )
-
-    message.Position =
-        UDim2.fromOffset(
-            24,
-            30
-        )
-
-    message.BackgroundTransparency =
-        1
-
-    message.Text =
-        messageText
-
-    message.TextColor3 =
-        MUTED
-
-    message.Font =
-        Enum.Font.Gotham
-
-    message.TextSize =
-        9
-
-    message.TextWrapped =
-        true
-
-    message.TextXAlignment =
-        Enum.TextXAlignment.Left
-
-    message.ZIndex =
-        101
-
-    message.Parent =
-        notification
-
-    notification.Position =
-        UDim2.new(
-            1,
-            30,
-            0,
-            0
-        )
-
-    tween(
-        notification,
-        {
-            Position =
-                UDim2.new(
-                    1,
-                    0,
-                    0,
-                    0
-                )
-        },
-        0.22
-    )
-
-    task.delay(
-        duration or 3,
-        function()
-
-            if not notification.Parent then
-                return
-            end
-
-            tween(
-                notification,
-                {
-                    Position =
-                        UDim2.new(
-                            1,
-                            30,
-                            0,
-                            0
-                        ),
-                    BackgroundTransparency =
-                        1
-                },
-                0.20
-            )
-
-            task.delay(
-                0.25,
-                function()
-
-                    if notification
-                        and notification.Parent then
-
-                        notification:Destroy()
-
-                    end
-
-                end
-            )
-
-        end
-    )
-
-end
 
 -- ============================================================================
 -- HEADER DISCORD
 -- ============================================================================
 
-local discordButton =
+local headerDiscord =
     Instance.new("TextButton")
 
-discordButton.Name =
-    "Discord"
-
-discordButton.Size =
+headerDiscord.Size =
     UDim2.fromOffset(
-        145,
-        38
+        95,
+        32
     )
 
-discordButton.Position =
+headerDiscord.Position =
     UDim2.new(
         1,
-        -195,
+        -145,
         0,
-        27
+        17
     )
 
-discordButton.BackgroundColor3 =
+headerDiscord.BackgroundColor3 =
     PANEL_2
 
-discordButton.BackgroundTransparency =
-    0.10
+headerDiscord.BackgroundTransparency =
+    0.12
 
-discordButton.BorderSizePixel =
+headerDiscord.BorderSizePixel =
     0
 
-discordButton.Text =
-    "DISCORD  ↗"
+headerDiscord.Text =
+    "DISCORD ↗"
 
-discordButton.TextColor3 =
+headerDiscord.TextColor3 =
     TEXT
 
-discordButton.Font =
+headerDiscord.Font =
     Enum.Font.GothamBold
 
-discordButton.TextSize =
-    10
+headerDiscord.TextSize =
+    8
 
-discordButton.AutoButtonColor =
+headerDiscord.AutoButtonColor =
     false
 
-discordButton.Parent =
+headerDiscord.Parent =
     header
 
 rounded(
-    discordButton,
-    8
+    headerDiscord,
+    7
 )
 
-local discordStroke =
-    makeStroke(
-        discordButton,
+local headerDiscordStroke =
+    stroke(
+        headerDiscord,
         BORDER,
         0.35
     )
 
-discordButton.MouseEnter:Connect(function()
+headerDiscord.MouseEnter:Connect(function()
 
     tween(
-        discordButton,
+        headerDiscord,
         {
             BackgroundColor3 =
                 CARD_HOVER
         },
-        0.15
+        0.12
     )
 
-    discordStroke.Color =
-        BORDER_BRIGHT
+    headerDiscordStroke.Color =
+        BORDER_LIGHT
 
 end)
 
-discordButton.MouseLeave:Connect(function()
+headerDiscord.MouseLeave:Connect(function()
 
     tween(
-        discordButton,
+        headerDiscord,
         {
             BackgroundColor3 =
                 PANEL_2
         },
-        0.15
+        0.12
     )
 
-    discordStroke.Color =
+    headerDiscordStroke.Color =
         BORDER
 
 end)
 
 -- ============================================================================
--- MINIMIZE BUTTON
+-- MINIMIZE
 -- ============================================================================
 
 local minimizeButton =
     Instance.new("TextButton")
 
-minimizeButton.Name =
-    "Minimize"
-
 minimizeButton.Size =
     UDim2.fromOffset(
-        35,
-        35
+        30,
+        30
     )
 
 minimizeButton.Position =
     UDim2.new(
         1,
-        -92,
+        -93,
         0,
-        28
+        18
     )
 
 minimizeButton.BackgroundTransparency =
@@ -1024,7 +699,7 @@ minimizeButton.Font =
     Enum.Font.GothamBold
 
 minimizeButton.TextSize =
-    18
+    16
 
 minimizeButton.AutoButtonColor =
     false
@@ -1032,42 +707,25 @@ minimizeButton.AutoButtonColor =
 minimizeButton.Parent =
     header
 
-minimizeButton.MouseEnter:Connect(function()
-
-    minimizeButton.TextColor3 =
-        WHITE
-
-end)
-
-minimizeButton.MouseLeave:Connect(function()
-
-    minimizeButton.TextColor3 =
-        MUTED
-
-end)
-
 -- ============================================================================
--- CLOSE BUTTON
+-- CLOSE
 -- ============================================================================
 
 local closeButton =
     Instance.new("TextButton")
 
-closeButton.Name =
-    "Close"
-
 closeButton.Size =
     UDim2.fromOffset(
-        35,
-        35
+        30,
+        30
     )
 
 closeButton.Position =
     UDim2.new(
         1,
-        -50,
+        -53,
         0,
-        28
+        18
     )
 
 closeButton.BackgroundTransparency =
@@ -1083,7 +741,7 @@ closeButton.Font =
     Enum.Font.Gotham
 
 closeButton.TextSize =
-    25
+    21
 
 closeButton.AutoButtonColor =
     false
@@ -1118,21 +776,18 @@ end)
 local body =
     Instance.new("Frame")
 
-body.Name =
-    "Body"
-
 body.Size =
     UDim2.new(
         1,
-        -36,
+        -28,
         1,
-        -136
+        -86
     )
 
 body.Position =
     UDim2.fromOffset(
-        18,
-        128
+        14,
+        82
     )
 
 body.BackgroundTransparency =
@@ -1148,26 +803,17 @@ body.Parent =
 local sidebar =
     Instance.new("Frame")
 
-sidebar.Name =
-    "Sidebar"
-
 sidebar.Size =
     UDim2.fromOffset(
-        190,
-        302
-    )
-
-sidebar.Position =
-    UDim2.fromOffset(
-        0,
-        0
+        170,
+        402
     )
 
 sidebar.BackgroundColor3 =
-    PANEL
+    SIDEBAR
 
 sidebar.BackgroundTransparency =
-    PANEL_TRANSPARENCY
+    0.05
 
 sidebar.BorderSizePixel =
     0
@@ -1177,52 +823,34 @@ sidebar.Parent =
 
 rounded(
     sidebar,
-    12
+    9
 )
 
-makeStroke(
+stroke(
     sidebar,
     BORDER,
-    0.42
+    0.48
 )
 
-local sidebarTitle =
-    Instance.new("TextLabel")
+-- ============================================================================
+-- SIDEBAR TITLE
+-- ============================================================================
 
-sidebarTitle.Size =
-    UDim2.new(
-        1,
-        -34,
-        0,
-        25
-    )
-
-sidebarTitle.Position =
+makeLabel(
+    sidebar,
+    "◆  SUPPORTED GAMES",
     UDim2.fromOffset(
-        17,
-        18
-    )
-
-sidebarTitle.BackgroundTransparency =
-    1
-
-sidebarTitle.Text =
-    "◆  SUPPORTED GAMES"
-
-sidebarTitle.TextColor3 =
-    TEXT
-
-sidebarTitle.Font =
+        15,
+        14
+    ),
+    UDim2.fromOffset(
+        140,
+        20
+    ),
+    8,
+    TEXT,
     Enum.Font.GothamBold
-
-sidebarTitle.TextSize =
-    10
-
-sidebarTitle.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-sidebarTitle.Parent =
-    sidebar
+)
 
 -- ============================================================================
 -- GAME LIST
@@ -1234,15 +862,15 @@ local gameList =
 gameList.Size =
     UDim2.new(
         1,
-        -24,
+        -18,
         0,
-        195
+        260
     )
 
 gameList.Position =
     UDim2.fromOffset(
-        12,
-        55
+        9,
+        46
     )
 
 gameList.BackgroundTransparency =
@@ -1251,1410 +879,215 @@ gameList.BackgroundTransparency =
 gameList.Parent =
     sidebar
 
-local listLayout =
+local gameLayout =
     Instance.new("UIListLayout")
 
-listLayout.Padding =
+gameLayout.Padding =
     UDim.new(
         0,
-        9
+        8
     )
 
-listLayout.SortOrder =
+gameLayout.SortOrder =
     Enum.SortOrder.LayoutOrder
 
-listLayout.Parent =
+gameLayout.Parent =
     gameList
 
 -- ============================================================================
 -- SIDEBAR FOOTER
 -- ============================================================================
 
-local footerLine =
+local sidebarFooterLine =
     Instance.new("Frame")
 
-footerLine.Size =
+sidebarFooterLine.Size =
     UDim2.new(
         1,
-        -34,
+        -28,
         0,
         1
     )
 
-footerLine.Position =
+sidebarFooterLine.Position =
     UDim2.new(
         0,
-        17,
+        14,
         1,
-        -51
+        -47
     )
 
-footerLine.BackgroundColor3 =
+sidebarFooterLine.BackgroundColor3 =
     BORDER
 
-footerLine.BackgroundTransparency =
-    0.45
+sidebarFooterLine.BackgroundTransparency =
+    0.48
 
-footerLine.BorderSizePixel =
+sidebarFooterLine.BorderSizePixel =
     0
 
-footerLine.Parent =
+sidebarFooterLine.Parent =
     sidebar
 
-local footer =
-    Instance.new("TextLabel")
-
-footer.Size =
+makeLabel(
+    sidebar,
+    "FAST  •  SECURE  •  RELIABLE",
+    UDim2.new(
+        0,
+        8,
+        1,
+        -36
+    ),
     UDim2.new(
         1,
-        -20,
+        -16,
         0,
         20
-    )
-
-footer.Position =
-    UDim2.new(
-        0,
-        10,
-        1,
-        -38
-    )
-
-footer.BackgroundTransparency =
-    1
-
-footer.Text =
-    "FAST   •   SECURE   •   RELIABLE"
-
-footer.TextColor3 =
-    DARK_MUTED
-
-footer.Font =
+    ),
+    7,
+    DARK_MUTED,
     Enum.Font.GothamMedium
-
-footer.TextSize =
-    8
-
-footer.TextXAlignment =
+).TextXAlignment =
     Enum.TextXAlignment.Center
 
-footer.Parent =
-    sidebar
-
 -- ============================================================================
--- CONTENT PANEL
+-- CONTENT CONTAINER
 -- ============================================================================
 
-local contentPanel =
+local content =
     Instance.new("Frame")
 
-contentPanel.Name =
-    "ContentPanel"
-
-contentPanel.Size =
+content.Size =
     UDim2.new(
         1,
-        -202,
-        0,
-        302
-    )
-
-contentPanel.Position =
-    UDim2.fromOffset(
-        202,
+        -180,
+        1,
         0
     )
 
-contentPanel.BackgroundColor3 =
+content.Position =
+    UDim2.fromOffset(
+        180,
+        0
+    )
+
+content.BackgroundColor3 =
     PANEL
 
-contentPanel.BackgroundTransparency =
+content.BackgroundTransparency =
     PANEL_TRANSPARENCY
 
-contentPanel.BorderSizePixel =
+content.BorderSizePixel =
     0
 
-contentPanel.Parent =
+content.ClipsDescendants =
+    true
+
+content.Parent =
     body
 
 rounded(
-    contentPanel,
-    12
+    content,
+    9
 )
 
-makeStroke(
-    contentPanel,
+stroke(
+    content,
     BORDER,
-    0.42
+    0.48
 )
 
 -- ============================================================================
--- SELECTED GAME ICON
+-- PAGE CONTAINER
 -- ============================================================================
 
-local selectedIcon =
+local pages =
     Instance.new("Frame")
 
-selectedIcon.Size =
-    UDim2.fromOffset(
-        64,
-        64
-    )
-
-selectedIcon.Position =
-    UDim2.fromOffset(
-        18,
-        18
-    )
-
-selectedIcon.BackgroundColor3 =
-    CARD
-
-selectedIcon.BackgroundTransparency =
-    CARD_TRANSPARENCY
-
-selectedIcon.BorderSizePixel =
-    0
-
-selectedIcon.Parent =
-    contentPanel
-
-rounded(
-    selectedIcon,
-    10
-)
-
-makeStroke(
-    selectedIcon,
-    BORDER_BRIGHT,
-    0.50
-)
-
-local selectedIconText =
-    Instance.new("TextLabel")
-
-selectedIconText.Size =
-    UDim2.new(
-        1,
-        0,
-        1,
-        0
-    )
-
-selectedIconText.BackgroundTransparency =
-    1
-
-selectedIconText.Text =
-    selectedScript.Short
-
-selectedIconText.TextColor3 =
-    WHITE
-
-selectedIconText.Font =
-    Enum.Font.GothamBold
-
-selectedIconText.TextSize =
-    28
-
-selectedIconText.Parent =
-    selectedIcon
-
--- ============================================================================
--- SELECTED GAME NAME
--- ============================================================================
-
-local selectedLabel =
-    Instance.new("TextLabel")
-
-selectedLabel.Size =
-    UDim2.new(
-        1,
-        -105,
-        0,
-        35
-    )
-
-selectedLabel.Position =
-    UDim2.fromOffset(
-        90,
-        20
-    )
-
-selectedLabel.BackgroundTransparency =
-    1
-
-selectedLabel.Text =
-    selectedScript.Name
-
-selectedLabel.TextColor3 =
-    WHITE
-
-selectedLabel.Font =
-    Enum.Font.GothamBold
-
-selectedLabel.TextSize =
-    22
-
-selectedLabel.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-selectedLabel.Parent =
-    contentPanel
-
--- ============================================================================
--- SELECTED SUBTITLE
--- ============================================================================
-
-local selectedSub =
-    Instance.new("TextLabel")
-
-selectedSub.Size =
-    UDim2.new(
-        1,
-        -105,
-        0,
-        24
-    )
-
-selectedSub.Position =
-    UDim2.fromOffset(
-        90,
-        55
-    )
-
-selectedSub.BackgroundTransparency =
-    1
-
-selectedSub.Text =
-    "Enter your ZeHub access key"
-
-selectedSub.TextColor3 =
-    MUTED
-
-selectedSub.Font =
-    Enum.Font.Gotham
-
-selectedSub.TextSize =
-    11
-
-selectedSub.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-selectedSub.Parent =
-    contentPanel
-
-local selectedUnderline =
-    Instance.new("Frame")
-
-selectedUnderline.Size =
-    UDim2.fromOffset(
-        62,
-        2
-    )
-
-selectedUnderline.Position =
-    UDim2.fromOffset(
-        90,
-        82
-    )
-
-selectedUnderline.BackgroundColor3 =
-    ACCENT
-
-selectedUnderline.BackgroundTransparency =
-    0.20
-
-selectedUnderline.BorderSizePixel =
-    0
-
-selectedUnderline.Parent =
-    contentPanel
-
-rounded(
-    selectedUnderline,
-    2
-)
-
--- ============================================================================
--- KEY INPUT
--- ============================================================================
-
-local keyBox =
-    Instance.new("TextBox")
-
-keyBox.Name =
-    "KeyBox"
-
-keyBox.Size =
-    UDim2.new(
-        1,
-        -36,
-        0,
-        58
-    )
-
-keyBox.Position =
-    UDim2.fromOffset(
-        18,
-        101
-    )
-
-keyBox.BackgroundColor3 =
-    INPUT
-
-keyBox.BackgroundTransparency =
-    INPUT_TRANSPARENCY
-
-keyBox.BorderSizePixel =
-    0
-
-keyBox.PlaceholderText =
-    "Enter your ZeHub key..."
-
-keyBox.PlaceholderColor3 =
-    DARK_MUTED
-
-keyBox.Text =
-    ""
-
-keyBox.TextColor3 =
-    WHITE
-
-keyBox.Font =
-    Enum.Font.Gotham
-
-keyBox.TextSize =
-    12
-
-keyBox.ClearTextOnFocus =
-    false
-
-keyBox.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-keyBox.Parent =
-    contentPanel
-
-rounded(
-    keyBox,
-    10
-)
-
-local keyStroke =
-    makeStroke(
-        keyBox,
-        BORDER,
-        0.35
-    )
-
-local keyPadding =
-    Instance.new("UIPadding")
-
-keyPadding.PaddingLeft =
-    UDim.new(
-        0,
-        18
-    )
-
-keyPadding.PaddingRight =
-    UDim.new(
-        0,
-        15
-    )
-
-keyPadding.Parent =
-    keyBox
-
-keyBox.Focused:Connect(function()
-
-    tween(
-        keyStroke,
-        {
-            Color =
-                BORDER_BRIGHT,
-            Transparency =
-                0.08
-        },
-        0.15
-    )
-
-end)
-
-keyBox.FocusLost:Connect(function()
-
-    tween(
-        keyStroke,
-        {
-            Color =
-                BORDER,
-            Transparency =
-                0.35
-        },
-        0.15
-    )
-
-end)
-
--- ============================================================================
--- BUTTON ROW
--- ============================================================================
-
-local buttonRow =
-    Instance.new("Frame")
-
-buttonRow.Size =
-    UDim2.new(
-        1,
-        -36,
-        0,
-        45
-    )
-
-buttonRow.Position =
-    UDim2.fromOffset(
-        18,
-        169
-    )
-
-buttonRow.BackgroundTransparency =
-    1
-
-buttonRow.Parent =
-    contentPanel
-
--- ============================================================================
--- DISCORD BUTTON
--- ============================================================================
-
-local discordAction =
-    Instance.new("TextButton")
-
-discordAction.Name =
-    "DiscordAction"
-
-discordAction.Size =
-    UDim2.new(
-        0.5,
-        -5,
-        1,
-        0
-    )
-
-discordAction.Position =
-    UDim2.fromOffset(
-        0,
-        0
-    )
-
-discordAction.BackgroundColor3 =
-    CARD
-
-discordAction.BackgroundTransparency =
-    CARD_TRANSPARENCY
-
-discordAction.BorderSizePixel =
-    0
-
-discordAction.Text =
-    "DISCORD  ↗"
-
-discordAction.TextColor3 =
-    TEXT
-
-discordAction.Font =
-    Enum.Font.GothamBold
-
-discordAction.TextSize =
-    10
-
-discordAction.AutoButtonColor =
-    false
-
-discordAction.Parent =
-    buttonRow
-
-rounded(
-    discordAction,
-    9
-)
-
-local discordActionStroke =
-    makeStroke(
-        discordAction,
-        BORDER,
-        0.35
-    )
-
-discordAction.MouseEnter:Connect(function()
-
-    discordAction.BackgroundColor3 =
-        CARD_HOVER
-
-    discordActionStroke.Color =
-        BORDER_BRIGHT
-
-end)
-
-discordAction.MouseLeave:Connect(function()
-
-    discordAction.BackgroundColor3 =
-        CARD
-
-    discordActionStroke.Color =
-        BORDER
-
-end)
-
--- ============================================================================
--- GET KEY BUTTON
--- ============================================================================
-
-local getKeyButton =
-    Instance.new("TextButton")
-
-getKeyButton.Name =
-    "GetKey"
-
-getKeyButton.Size =
-    UDim2.new(
-        0.5,
-        -5,
-        1,
-        0
-    )
-
-getKeyButton.Position =
-    UDim2.new(
-        0.5,
-        5,
-        0,
-        0
-    )
-
-getKeyButton.BackgroundColor3 =
-    ACCENT
-
-getKeyButton.BackgroundTransparency =
-    0.03
-
-getKeyButton.BorderSizePixel =
-    0
-
-getKeyButton.Text =
-    "GET KEY  ↗"
-
-getKeyButton.TextColor3 =
-    Color3.fromRGB(
-        10,
-        10,
-        11
-    )
-
-getKeyButton.Font =
-    Enum.Font.GothamBold
-
-getKeyButton.TextSize =
-    10
-
-getKeyButton.AutoButtonColor =
-    false
-
-getKeyButton.Parent =
-    buttonRow
-
-rounded(
-    getKeyButton,
-    9
-)
-
-local getKeyStroke =
-    makeStroke(
-        getKeyButton,
-        WHITE,
-        0.65
-    )
-
-getKeyButton.MouseEnter:Connect(function()
-
-    getKeyButton.BackgroundColor3 =
-        WHITE
-
-end)
-
-getKeyButton.MouseLeave:Connect(function()
-
-    getKeyButton.BackgroundColor3 =
-        ACCENT
-
-end)
-
--- ============================================================================
--- LOAD SCRIPT BUTTON
--- ============================================================================
-
-local runButton =
-    Instance.new("TextButton")
-
-runButton.Name =
-    "LoadScript"
-
-runButton.Size =
-    UDim2.new(
-        1,
-        -36,
-        0,
-        49
-    )
-
-runButton.Position =
-    UDim2.fromOffset(
-        18,
-        224
-    )
-
-runButton.BackgroundColor3 =
-    CARD_HOVER
-
-runButton.BackgroundTransparency =
-    0.02
-
-runButton.BorderSizePixel =
-    0
-
-runButton.Text =
-    "LOAD SCRIPT                         ›"
-
-runButton.TextColor3 =
-    WHITE
-
-runButton.Font =
-    Enum.Font.GothamBold
-
-runButton.TextSize =
-    12
-
-runButton.AutoButtonColor =
-    false
-
-runButton.Parent =
-    contentPanel
-
-rounded(
-    runButton,
-    9
-)
-
-local loadStroke =
-    makeStroke(
-        runButton,
-        BORDER_BRIGHT,
-        0.30
-    )
-
-local accentBar =
-    Instance.new("Frame")
-
-accentBar.Size =
-    UDim2.fromOffset(
-        3,
-        31
-    )
-
-accentBar.Position =
-    UDim2.new(
-        1,
-        -8,
-        0.5,
-        -15
-    )
-
-accentBar.BackgroundColor3 =
-    ACCENT
-
-accentBar.BackgroundTransparency =
-    0.05
-
-accentBar.BorderSizePixel =
-    0
-
-accentBar.Parent =
-    runButton
-
-rounded(
-    accentBar,
-    2
-)
-
-runButton.MouseEnter:Connect(function()
-
-    runButton.BackgroundColor3 =
-        Color3.fromRGB(
-            30,
-            30,
-            32
-        )
-
-    loadStroke.Transparency =
-        0.12
-
-end)
-
-runButton.MouseLeave:Connect(function()
-
-    runButton.BackgroundColor3 =
-        CARD_HOVER
-
-    loadStroke.Transparency =
-        0.30
-
-end)
-
--- ============================================================================
--- STATUS BOX
--- ============================================================================
-
-local statusBox =
-    Instance.new("Frame")
-
-statusBox.Name =
-    "StatusBox"
-
-statusBox.Size =
-    UDim2.new(
-        1,
-        -36,
-        0,
-        48
-    )
-
-statusBox.Position =
-    UDim2.fromOffset(
-        18,
-        283
-    )
-
-statusBox.BackgroundColor3 =
-    PANEL_2
-
-statusBox.BackgroundTransparency =
-    0.08
-
-statusBox.BorderSizePixel =
-    0
-
-statusBox.Parent =
-    contentPanel
-
-rounded(
-    statusBox,
-    9
-)
-
-local statusStroke =
-    makeStroke(
-        statusBox,
-        BORDER,
-        0.45
-    )
-
-local infoIcon =
-    Instance.new("TextLabel")
-
-infoIcon.Size =
-    UDim2.fromOffset(
-        30,
-        30
-    )
-
-infoIcon.Position =
-    UDim2.fromOffset(
-        12,
-        9
-    )
-
-infoIcon.BackgroundTransparency =
-    1
-
-infoIcon.Text =
-    "ⓘ"
-
-infoIcon.TextColor3 =
-    MUTED
-
-infoIcon.Font =
-    Enum.Font.Gotham
-
-infoIcon.TextSize =
-    21
-
-infoIcon.Parent =
-    statusBox
-
-local status =
-    Instance.new("TextLabel")
-
-status.Size =
-    UDim2.new(
-        1,
-        -58,
-        1,
-        0
-    )
-
-status.Position =
-    UDim2.fromOffset(
-        50,
-        0
-    )
-
-status.BackgroundTransparency =
-    1
-
-status.Text =
-    "Ready. Enter your access key to continue."
-
-status.TextColor3 =
-    MUTED
-
-status.Font =
-    Enum.Font.Gotham
-
-status.TextSize =
-    10
-
-status.TextWrapped =
-    true
-
-status.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-status.TextYAlignment =
-    Enum.TextYAlignment.Center
-
-status.Parent =
-    statusBox
-
--- ============================================================================
--- STATUS FUNCTIONS
--- ============================================================================
-
-local authorizing =
-    false
-
-setStatusNormal =
-    function(text)
-
-        status.Text =
-            text
-
-        infoIcon.Text =
-            "ⓘ"
-
-        infoIcon.TextColor3 =
-            MUTED
-
-        statusStroke.Color =
-            BORDER
-
-        statusStroke.Transparency =
-            0.45
-
-    end
-
-setStatusLoading =
-    function(text)
-
-        status.Text =
-            text
-
-        infoIcon.Text =
-            "◌"
-
-        infoIcon.TextColor3 =
-            WHITE
-
-        statusStroke.Color =
-            BORDER_BRIGHT
-
-        statusStroke.Transparency =
-            0.20
-
-    end
-
-setStatusSuccess =
-    function(text)
-
-        status.Text =
-            text
-
-        infoIcon.Text =
-            "✓"
-
-        infoIcon.TextColor3 =
-            SUCCESS
-
-        statusStroke.Color =
-            BORDER_BRIGHT
-
-        statusStroke.Transparency =
-            0.10
-
-    end
-
-setStatusError =
-    function(text)
-
-        status.Text =
-            text
-
-        infoIcon.Text =
-            "!"
-
-        infoIcon.TextColor3 =
-            ERROR
-
-        statusStroke.Color =
-            BORDER_BRIGHT
-
-        statusStroke.Transparency =
-            0.15
-
-    end
-
--- ============================================================================
--- AUTHORIZATION OVERLAY
--- ============================================================================
-
-local authOverlay =
-    Instance.new("Frame")
-
-authOverlay.Name =
-    "AuthorizationOverlay"
-
-authOverlay.Size =
+pages.Size =
     UDim2.fromScale(
         1,
         1
     )
 
-authOverlay.BackgroundColor3 =
-    BACKGROUND
-
-authOverlay.BackgroundTransparency =
-    0.16
-
-authOverlay.BorderSizePixel =
-    0
-
-authOverlay.Visible =
-    false
-
-authOverlay.ZIndex =
-    50
-
-authOverlay.Parent =
-    frame
-
--- ============================================================================
--- AUTH CARD
--- ============================================================================
-
-local authCard =
-    Instance.new("Frame")
-
-authCard.Name =
-    "AuthorizationCard"
-
-authCard.Size =
-    UDim2.fromOffset(
-        330,
-        205
-    )
-
-authCard.Position =
-    UDim2.fromScale(
-        0.5,
-        0.5
-    )
-
-authCard.AnchorPoint =
-    Vector2.new(
-        0.5,
-        0.5
-    )
-
-authCard.BackgroundColor3 =
-    PANEL
-
-authCard.BackgroundTransparency =
-    0.03
-
-authCard.BorderSizePixel =
-    0
-
-authCard.ZIndex =
-    51
-
-authCard.Parent =
-    authOverlay
-
-rounded(
-    authCard,
-    12
-)
-
-makeStroke(
-    authCard,
-    BORDER_BRIGHT,
-    0.40
-)
-
--- ============================================================================
--- AUTH TITLE
--- ============================================================================
-
-local authTitle =
-    Instance.new("TextLabel")
-
-authTitle.Size =
-    UDim2.new(
-        1,
-        -40,
-        0,
-        28
-    )
-
-authTitle.Position =
-    UDim2.fromOffset(
-        20,
-        20
-    )
-
-authTitle.BackgroundTransparency =
+pages.BackgroundTransparency =
     1
 
-authTitle.Text =
-    "AUTHORIZING ZEHUB"
-
-authTitle.TextColor3 =
-    WHITE
-
-authTitle.Font =
-    Enum.Font.GothamBold
-
-authTitle.TextSize =
-    15
-
-authTitle.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-authTitle.ZIndex =
-    52
-
-authTitle.Parent =
-    authCard
-
-local authSubtitle =
-    Instance.new("TextLabel")
-
-authSubtitle.Size =
-    UDim2.new(
-        1,
-        -40,
-        0,
-        24
-    )
-
-authSubtitle.Position =
-    UDim2.fromOffset(
-        20,
-        50
-    )
-
-authSubtitle.BackgroundTransparency =
-    1
-
-authSubtitle.Text =
-    "Connecting to FlowAuth..."
-
-authSubtitle.TextColor3 =
-    MUTED
-
-authSubtitle.Font =
-    Enum.Font.Gotham
-
-authSubtitle.TextSize =
-    9
-
-authSubtitle.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-authSubtitle.ZIndex =
-    52
-
-authSubtitle.Parent =
-    authCard
+pages.Parent =
+    content
 
 -- ============================================================================
--- AUTH STEPS
+-- PAGE CREATOR
 -- ============================================================================
 
-local authSteps =
-    {}
+local function createPage()
 
-local function createAuthStep(
-    index,
-    textValue,
-    y
-)
-
-    local dot =
+    local page =
         Instance.new("Frame")
 
-    dot.Size =
-        UDim2.fromOffset(
-            8,
-            8
-        )
-
-    dot.Position =
-        UDim2.fromOffset(
-            21,
-            y + 5
-        )
-
-    dot.BackgroundColor3 =
-        DARK_MUTED
-
-    dot.BorderSizePixel =
-        0
-
-    dot.ZIndex =
-        52
-
-    dot.Parent =
-        authCard
-
-    rounded(
-        dot,
-        4
-    )
-
-    local label =
-        Instance.new("TextLabel")
-
-    label.Size =
-        UDim2.new(
+    page.Size =
+        UDim2.fromScale(
             1,
-            -50,
-            0,
-            20
+            1
         )
 
-    label.Position =
-        UDim2.fromOffset(
-            40,
-            y
-        )
-
-    label.BackgroundTransparency =
+    page.BackgroundTransparency =
         1
 
-    label.Text =
-        textValue
+    page.Visible =
+        false
 
-    label.TextColor3 =
-        DARK_MUTED
+    page.Parent =
+        pages
 
-    label.Font =
-        Enum.Font.GothamMedium
-
-    label.TextSize =
-        9
-
-    label.TextXAlignment =
-        Enum.TextXAlignment.Left
-
-    label.ZIndex =
-        52
-
-    label.Parent =
-        authCard
-
-    authSteps[index] =
-        {
-            Dot = dot,
-            Label = label
-        }
+    return page
 
 end
 
-createAuthStep(
-    1,
-    "Connecting to FlowAuth",
-    84
-)
+local mainPage =
+    createPage()
 
-createAuthStep(
-    2,
-    "Validating access key",
-    113
-)
+local getKeyPage =
+    createPage()
 
-createAuthStep(
-    3,
-    "Loading selected script",
-    142
-)
+local discordPage =
+    createPage()
 
 -- ============================================================================
--- AUTH HINT
+-- PAGE SWITCHER
 -- ============================================================================
 
-local authHint =
-    Instance.new("TextLabel")
+local currentPage =
+    mainPage
 
-authHint.Size =
-    UDim2.new(
-        1,
-        -40,
-        0,
-        22
-    )
+local function showPage(page)
 
-authHint.Position =
-    UDim2.fromOffset(
-        20,
-        173
-    )
-
-authHint.BackgroundTransparency =
-    1
-
-authHint.Text =
-    "Please wait..."
-
-authHint.TextColor3 =
-    DARK_MUTED
-
-authHint.Font =
-    Enum.Font.Gotham
-
-authHint.TextSize =
-    8
-
-authHint.TextXAlignment =
-    Enum.TextXAlignment.Left
-
-authHint.ZIndex =
-    52
-
-authHint.Parent =
-    authCard
-
-local function authStep(
-    index,
-    state
-)
-
-    local item =
-        authSteps[index]
-
-    if not item then
+    if currentPage == page then
         return
     end
 
-    if state == "active" then
-
-        item.Dot.BackgroundColor3 =
-            WHITE
-
-        item.Label.TextColor3 =
-            WHITE
-
-    elseif state == "done" then
-
-        item.Dot.BackgroundColor3 =
-            WHITE
-
-        item.Label.TextColor3 =
-            TEXT
-
-    else
-
-        item.Dot.BackgroundColor3 =
-            DARK_MUTED
-
-        item.Label.TextColor3 =
-            DARK_MUTED
-
-    end
-
-end
-
-local function showAuthOverlay()
-
-    authOverlay.Visible =
-        true
-
-    authOverlay.BackgroundTransparency =
-        1
-
-    authCard.Position =
-        UDim2.fromScale(
-            0.5,
-            0.54
-        )
-
-    for i = 1, #authSteps do
-
-        authStep(
-            i,
-            "idle"
-        )
-
-    end
-
-    tween(
-        authOverlay,
-        {
-            BackgroundTransparency =
-                0.16
-        },
-        0.18
-    )
-
-    tween(
-        authCard,
-        {
-            Position =
-                UDim2.fromScale(
-                    0.5,
-                    0.5
-                )
-        },
-        0.22
-    )
-
-end
-
-local function hideAuthOverlay()
-
-    authOverlay.Visible =
+    currentPage.Visible =
         false
 
+    page.Visible =
+        true
+
+    currentPage =
+        page
+
 end
 
+mainPage.Visible =
+    true
+
 -- ============================================================================
--- GAME BUTTONS
+-- SIDEBAR GAME BUTTONS
 -- ============================================================================
 
-local buttons =
+local gameButtons =
     {}
 
-local function createGameButton(
-    scriptData
-)
+local function createGameButton(scriptData)
 
     local button =
         Instance.new("TextButton")
@@ -2687,187 +1120,147 @@ local function createGameButton(
 
     rounded(
         button,
-        10
+        7
     )
 
     local buttonStroke =
-        makeStroke(
+        stroke(
             button,
             BORDER,
-            0.75
+            0.70
         )
 
-    local iconBackground =
+    -- Icon
+
+    local iconBox =
         Instance.new("Frame")
 
-    iconBackground.Size =
+    iconBox.Size =
         UDim2.fromOffset(
-            40,
-            40
+            36,
+            36
         )
 
-    iconBackground.Position =
+    iconBox.Position =
         UDim2.fromOffset(
-            9,
-            9
+            8,
+            11
         )
 
-    iconBackground.BackgroundColor3 =
+    iconBox.BackgroundColor3 =
         INPUT
 
-    iconBackground.BackgroundTransparency =
-        0.04
+    iconBox.BackgroundTransparency =
+        0.02
 
-    iconBackground.BorderSizePixel =
+    iconBox.BorderSizePixel =
         0
 
-    iconBackground.Parent =
+    iconBox.Parent =
         button
 
     rounded(
-        iconBackground,
-        8
+        iconBox,
+        7
+    )
+
+    stroke(
+        iconBox,
+        BORDER,
+        0.38
     )
 
     local icon =
-        Instance.new("TextLabel")
-
-    icon.Size =
-        UDim2.new(
-            1,
-            0,
-            1,
-            0
+        makeLabel(
+            iconBox,
+            scriptData.Short,
+            UDim2.fromScale(
+                0,
+                0
+            ),
+            UDim2.fromScale(
+                1,
+                1
+            ),
+            16,
+            WHITE,
+            Enum.Font.GothamBold
         )
 
-    icon.BackgroundTransparency =
-        1
+    icon.TextXAlignment =
+        Enum.TextXAlignment.Center
 
-    icon.Text =
-        scriptData.Short
+    icon.TextYAlignment =
+        Enum.TextYAlignment.Center
 
-    icon.TextColor3 =
-        TEXT
-
-    icon.Font =
-        Enum.Font.GothamBold
-
-    icon.TextSize =
-        18
-
-    icon.Parent =
-        iconBackground
+    -- Name
 
     local name =
-        Instance.new("TextLabel")
-
-    name.Size =
-        UDim2.new(
-            1,
-            -82,
-            0,
-            20
+        makeLabel(
+            button,
+            scriptData.Name,
+            UDim2.fromOffset(
+                53,
+                10
+            ),
+            UDim2.new(
+                1,
+                -78,
+                0,
+                17
+            ),
+            9,
+            TEXT,
+            Enum.Font.GothamBold
         )
 
-    name.Position =
-        UDim2.fromOffset(
-            62,
-            10
-        )
-
-    name.BackgroundTransparency =
-        1
-
-    name.Text =
-        scriptData.Name
-
-    name.TextColor3 =
-        TEXT
-
-    name.Font =
-        Enum.Font.GothamBold
-
-    name.TextSize =
-        11
-
-    name.TextXAlignment =
-        Enum.TextXAlignment.Left
-
-    name.Parent =
-        button
+    -- Description
 
     local description =
-        Instance.new("TextLabel")
-
-    description.Size =
-        UDim2.new(
-            1,
-            -82,
-            0,
-            18
+        makeLabel(
+            button,
+            scriptData.Description,
+            UDim2.fromOffset(
+                53,
+                29
+            ),
+            UDim2.new(
+                1,
+                -75,
+                0,
+                15
+            ),
+            7,
+            MUTED,
+            Enum.Font.Gotham
         )
 
-    description.Position =
-        UDim2.fromOffset(
-            62,
-            30
-        )
-
-    description.BackgroundTransparency =
-        1
-
-    description.Text =
-        scriptData.Description
-
-    description.TextColor3 =
-        MUTED
-
-    description.Font =
-        Enum.Font.Gotham
-
-    description.TextSize =
-        8
-
-    description.TextXAlignment =
-        Enum.TextXAlignment.Left
-
-    description.Parent =
-        button
+    -- Arrow
 
     local arrow =
-        Instance.new("TextLabel")
-
-    arrow.Size =
-        UDim2.fromOffset(
-            25,
-            40
+        makeLabel(
+            button,
+            "›",
+            UDim2.new(
+                1,
+                -23,
+                0,
+                9
+            ),
+            UDim2.fromOffset(
+                15,
+                35
+            ),
+            18,
+            MUTED,
+            Enum.Font.Gotham
         )
 
-    arrow.Position =
-        UDim2.new(
-            1,
-            -33,
-            0.5,
-            -20
-        )
+    arrow.TextXAlignment =
+        Enum.TextXAlignment.Center
 
-    arrow.BackgroundTransparency =
-        1
-
-    arrow.Text =
-        "›"
-
-    arrow.TextColor3 =
-        MUTED
-
-    arrow.Font =
-        Enum.Font.Gotham
-
-    arrow.TextSize =
-        24
-
-    arrow.Parent =
-        button
+    arrow.TextYAlignment =
+        Enum.TextYAlignment.Center
 
     local data =
         {
@@ -2877,7 +1270,7 @@ local function createGameButton(
         }
 
     table.insert(
-        buttons,
+        gameButtons,
         data
     )
 
@@ -2885,8 +1278,17 @@ local function createGameButton(
 
         if selectedScript ~= scriptData then
 
-            button.BackgroundColor3 =
-                CARD_HOVER
+            tween(
+                button,
+                {
+                    BackgroundColor3 =
+                        CARD_HOVER
+                },
+                0.12
+            )
+
+            buttonStroke.Transparency =
+                0.35
 
         end
 
@@ -2896,8 +1298,17 @@ local function createGameButton(
 
         if selectedScript ~= scriptData then
 
-            button.BackgroundColor3 =
-                CARD
+            tween(
+                button,
+                {
+                    BackgroundColor3 =
+                        CARD
+                },
+                0.12
+            )
+
+            buttonStroke.Transparency =
+                0.70
 
         end
 
@@ -2908,37 +1319,8 @@ local function createGameButton(
         selectedScript =
             scriptData
 
-        selectedLabel.Text =
-            scriptData.Name
-
-        selectedIconText.Text =
-            scriptData.Short
-
-        if scriptData.Name ==
-            "Coming Soon" then
-
-            selectedSub.Text =
-                "This game is coming soon"
-
-            setStatusNormal(
-                "This game is coming soon."
-            )
-
-        else
-
-            selectedSub.Text =
-                "Enter your ZeHub access key"
-
-            setStatusNormal(
-                "Ready to load "
-                    .. scriptData.Name
-                    .. "."
-            )
-
-        end
-
         for _, item in
-            ipairs(buttons) do
+            ipairs(gameButtons) do
 
             item.Button.BackgroundColor3 =
                 CARD
@@ -2947,7 +1329,7 @@ local function createGameButton(
                 BORDER
 
             item.Stroke.Transparency =
-                0.75
+                0.70
 
         end
 
@@ -2955,10 +1337,33 @@ local function createGameButton(
             CARD_SELECTED
 
         buttonStroke.Color =
-            BORDER_BRIGHT
+            BORDER_LIGHT
 
         buttonStroke.Transparency =
-            0.18
+            0.15
+
+        if selectedScript.Name ==
+            "Coming Soon" then
+
+            setStatus(
+                "ⓘ",
+                "This game is coming soon.",
+                MUTED
+            )
+
+        else
+
+            setStatus(
+                "ⓘ",
+                "Ready. Enter your access key to continue.",
+                MUTED
+            )
+
+        end
+
+        showPage(
+            mainPage
+        )
 
     end)
 
@@ -2975,24 +1380,2363 @@ for _, scriptData in
 
 end
 
-if buttons[1] then
+if gameButtons[1] then
 
-    buttons[1].Button.BackgroundColor3 =
+    gameButtons[1].Button.BackgroundColor3 =
         CARD_SELECTED
 
-    buttons[1].Stroke.Color =
-        BORDER_BRIGHT
+    gameButtons[1].Stroke.Color =
+        BORDER_LIGHT
 
-    buttons[1].Stroke.Transparency =
-        0.18
+    gameButtons[1].Stroke.Transparency =
+        0.15
 
 end
 
 -- ============================================================================
--- DISCORD ACTION
+-- STATUS BAR
 -- ============================================================================
 
-discordButton.Activated:Connect(function()
+local statusBar =
+    Instance.new("Frame")
+
+statusBar.Size =
+    UDim2.new(
+        1,
+        -24,
+        0,
+        38
+    )
+
+statusBar.Position =
+    UDim2.new(
+        0,
+        12,
+        1,
+        -50
+    )
+
+statusBar.BackgroundColor3 =
+    PANEL_2
+
+statusBar.BackgroundTransparency =
+    0.08
+
+statusBar.BorderSizePixel =
+    0
+
+statusBar.ZIndex =
+    10
+
+statusBar.Parent =
+    content
+
+rounded(
+    statusBar,
+    7
+)
+
+local statusStroke =
+    stroke(
+        statusBar,
+        BORDER,
+        0.48
+    )
+
+local statusIcon =
+    makeLabel(
+        statusBar,
+        "ⓘ",
+        UDim2.fromOffset(
+            10,
+            0
+        ),
+        UDim2.fromOffset(
+            22,
+            38
+        ),
+        15,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+statusIcon.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+statusIcon.TextYAlignment =
+    Enum.TextYAlignment.Center
+
+local statusText =
+    makeLabel(
+        statusBar,
+        "Ready. Enter your access key to continue.",
+        UDim2.fromOffset(
+            35,
+            0
+        ),
+        UDim2.new(
+            1,
+            -45,
+            1,
+            0
+        ),
+        8,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+-- ============================================================================
+-- STATUS FUNCTION
+-- ============================================================================
+
+function setStatus(
+    icon,
+    textValue,
+    color
+)
+
+    statusIcon.Text =
+        icon
+
+    statusIcon.TextColor3 =
+        color or MUTED
+
+    statusText.Text =
+        textValue
+
+    statusText.TextColor3 =
+        color or MUTED
+
+end
+
+-- ============================================================================
+-- MAIN PAGE
+-- ============================================================================
+
+do
+
+    -- Header
+
+    makeLabel(
+        mainPage,
+        selectedScript.Name,
+        UDim2.fromOffset(
+            22,
+            18
+        ),
+        UDim2.fromOffset(
+            280,
+            30
+        ),
+        18,
+        WHITE,
+        Enum.Font.GothamBold
+    )
+
+    local mainSubtitle =
+        makeLabel(
+            mainPage,
+            "Enter your ZeHub access key",
+            UDim2.fromOffset(
+                22,
+                44
+            ),
+            UDim2.fromOffset(
+                300,
+                18
+            ),
+            8,
+            MUTED,
+            Enum.Font.Gotham
+        )
+
+    local mainIcon =
+        Instance.new("Frame")
+
+    mainIcon.Size =
+        UDim2.fromOffset(
+            52,
+            52
+        )
+
+    mainIcon.Position =
+        UDim2.new(
+            1,
+            -74,
+            0,
+            18
+        )
+
+    mainIcon.BackgroundColor3 =
+        CARD
+
+    mainIcon.BackgroundTransparency =
+        0.02
+
+    mainIcon.BorderSizePixel =
+        0
+
+    mainIcon.Parent =
+        mainPage
+
+    rounded(
+        mainIcon,
+        8
+    )
+
+    stroke(
+        mainIcon,
+        BORDER_LIGHT,
+        0.50
+    )
+
+    local mainIconText =
+        makeLabel(
+            mainIcon,
+            "R",
+            UDim2.fromScale(
+                0,
+                0
+            ),
+            UDim2.fromScale(
+                1,
+                1
+            ),
+            22,
+            WHITE,
+            Enum.Font.GothamBold
+        )
+
+    mainIconText.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    mainIconText.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    -- Underline
+
+    local underline =
+        Instance.new("Frame")
+
+    underline.Size =
+        UDim2.fromOffset(
+            58,
+            2
+        )
+
+    underline.Position =
+        UDim2.fromOffset(
+            22,
+            70
+        )
+
+    underline.BackgroundColor3 =
+        ACCENT
+
+    underline.BorderSizePixel =
+        0
+
+    underline.Parent =
+        mainPage
+
+    rounded(
+        underline,
+        2
+    )
+
+    -- Key box
+
+    local keyBox =
+        Instance.new("TextBox")
+
+    keyBox.Name =
+        "KeyBox"
+
+    keyBox.Size =
+        UDim2.new(
+            1,
+            -44,
+            0,
+            49
+        )
+
+    keyBox.Position =
+        UDim2.fromOffset(
+            22,
+            91
+        )
+
+    keyBox.BackgroundColor3 =
+        INPUT
+
+    keyBox.BackgroundTransparency =
+        INPUT_TRANSPARENCY
+
+    keyBox.BorderSizePixel =
+        0
+
+    keyBox.PlaceholderText =
+        "Enter your ZeHub key..."
+
+    keyBox.PlaceholderColor3 =
+        DARK_MUTED
+
+    keyBox.Text =
+        ""
+
+    keyBox.TextColor3 =
+        WHITE
+
+    keyBox.Font =
+        Enum.Font.Gotham
+
+    keyBox.TextSize =
+        9
+
+    keyBox.ClearTextOnFocus =
+        false
+
+    keyBox.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    keyBox.Parent =
+        mainPage
+
+    rounded(
+        keyBox,
+        7
+    )
+
+    local keyStroke =
+        stroke(
+            keyBox,
+            BORDER,
+            0.30
+        )
+
+    local padding =
+        Instance.new("UIPadding")
+
+    padding.PaddingLeft =
+        UDim.new(
+            0,
+            13
+        )
+
+    padding.PaddingRight =
+        UDim.new(
+            0,
+            13
+        )
+
+    padding.Parent =
+        keyBox
+
+    keyBox.Focused:Connect(function()
+
+        keyStroke.Color =
+            BORDER_LIGHT
+
+        keyStroke.Transparency =
+            0.05
+
+    end)
+
+    keyBox.FocusLost:Connect(function()
+
+        keyStroke.Color =
+            BORDER
+
+        keyStroke.Transparency =
+            0.30
+
+    end)
+
+    -- Button row
+
+    local actionRow =
+        Instance.new("Frame")
+
+    actionRow.Size =
+        UDim2.new(
+            1,
+            -44,
+            0,
+            42
+        )
+
+    actionRow.Position =
+        UDim2.fromOffset(
+            22,
+            151
+        )
+
+    actionRow.BackgroundTransparency =
+        1
+
+    actionRow.Parent =
+        mainPage
+
+    -- Discord action
+
+    local discordAction =
+        Instance.new("TextButton")
+
+    discordAction.Size =
+        UDim2.new(
+            0.5,
+            -4,
+            1,
+            0
+        )
+
+    discordAction.BackgroundColor3 =
+        CARD
+
+    discordAction.BackgroundTransparency =
+        0.02
+
+    discordAction.BorderSizePixel =
+        0
+
+    discordAction.Text =
+        "DISCORD ↗"
+
+    discordAction.TextColor3 =
+        TEXT
+
+    discordAction.Font =
+        Enum.Font.GothamBold
+
+    discordAction.TextSize =
+        9
+
+    discordAction.AutoButtonColor =
+        false
+
+    discordAction.Parent =
+        actionRow
+
+    rounded(
+        discordAction,
+        7
+    )
+
+    local discordActionStroke =
+        stroke(
+            discordAction,
+            BORDER,
+            0.35
+        )
+
+    discordAction.MouseEnter:Connect(function()
+
+        discordAction.BackgroundColor3 =
+            CARD_HOVER
+
+        discordActionStroke.Color =
+            BORDER_LIGHT
+
+    end)
+
+    discordAction.MouseLeave:Connect(function()
+
+        discordAction.BackgroundColor3 =
+            CARD
+
+        discordActionStroke.Color =
+            BORDER
+
+    end)
+
+    discordAction.Activated:Connect(function()
+
+        showPage(
+            discordPage
+        )
+
+    end)
+
+    -- Get key
+
+    local getKeyAction =
+        Instance.new("TextButton")
+
+    getKeyAction.Size =
+        UDim2.new(
+            0.5,
+            -4,
+            1,
+            0
+        )
+
+    getKeyAction.Position =
+        UDim2.new(
+            0.5,
+            4,
+            0,
+            0
+        )
+
+    getKeyAction.BackgroundColor3 =
+        ACCENT
+
+    getKeyAction.BackgroundTransparency =
+        0.02
+
+    getKeyAction.BorderSizePixel =
+        0
+
+    getKeyAction.Text =
+        "GET KEY ↗"
+
+    getKeyAction.TextColor3 =
+        Color3.fromRGB(
+            10,
+            11,
+            13
+        )
+
+    getKeyAction.Font =
+        Enum.Font.GothamBold
+
+    getKeyAction.TextSize =
+        9
+
+    getKeyAction.AutoButtonColor =
+        false
+
+    getKeyAction.Parent =
+        actionRow
+
+    rounded(
+        getKeyAction,
+        7
+    )
+
+    getKeyAction.MouseEnter:Connect(function()
+
+        getKeyAction.BackgroundColor3 =
+            WHITE
+
+    end)
+
+    getKeyAction.MouseLeave:Connect(function()
+
+        getKeyAction.BackgroundColor3 =
+            ACCENT
+
+    end)
+
+    getKeyAction.Activated:Connect(function()
+
+        showPage(
+            getKeyPage
+        )
+
+    end)
+
+    -- Load button
+
+    local loadButton =
+        Instance.new("TextButton")
+
+    loadButton.Size =
+        UDim2.new(
+            1,
+            -44,
+            0,
+            48
+        )
+
+    loadButton.Position =
+        UDim2.fromOffset(
+            22,
+            205
+        )
+
+    loadButton.BackgroundColor3 =
+        CARD_HOVER
+
+    loadButton.BackgroundTransparency =
+        0.02
+
+    loadButton.BorderSizePixel =
+        0
+
+    loadButton.Text =
+        "⚡  LOAD SCRIPT"
+
+    loadButton.TextColor3 =
+        WHITE
+
+    loadButton.Font =
+        Enum.Font.GothamBold
+
+    loadButton.TextSize =
+        10
+
+    loadButton.AutoButtonColor =
+        false
+
+    loadButton.Parent =
+        mainPage
+
+    rounded(
+        loadButton,
+        7
+    )
+
+    local loadStroke =
+        stroke(
+            loadButton,
+            BORDER_LIGHT,
+            0.32
+        )
+
+    local loadArrow =
+        makeLabel(
+            loadButton,
+            "›",
+            UDim2.new(
+                1,
+                -34,
+                0,
+                0
+            ),
+            UDim2.fromOffset(
+                25,
+                48
+            ),
+            20,
+            MUTED,
+            Enum.Font.Gotham
+        )
+
+    loadArrow.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    loadArrow.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    loadButton.MouseEnter:Connect(function()
+
+        loadButton.BackgroundColor3 =
+            Color3.fromRGB(
+                26,
+                29,
+                33
+            )
+
+        loadStroke.Transparency =
+            0.10
+
+        loadArrow.TextColor3 =
+            WHITE
+
+    end)
+
+    loadButton.MouseLeave:Connect(function()
+
+        loadButton.BackgroundColor3 =
+            CARD_HOVER
+
+        loadStroke.Transparency =
+            0.32
+
+        loadArrow.TextColor3 =
+            MUTED
+
+    end)
+
+    -- Store globals
+
+    _G.ZeHubKeyBox =
+        keyBox
+
+    _G.ZeHubLoadButton =
+        loadButton
+
+    _G.ZeHubMainSubtitle =
+        mainSubtitle
+
+    _G.ZeHubMainIcon =
+        mainIconText
+
+end
+
+-- ============================================================================
+-- GET KEY PAGE
+-- ============================================================================
+
+do
+
+    local back =
+        Instance.new("TextButton")
+
+    back.Size =
+        UDim2.fromOffset(
+            90,
+            30
+        )
+
+    back.Position =
+        UDim2.fromOffset(
+            17,
+            14
+        )
+
+    back.BackgroundTransparency =
+        1
+
+    back.Text =
+        "‹  GET KEY"
+
+    back.TextColor3 =
+        TEXT
+
+    back.Font =
+        Enum.Font.GothamBold
+
+    back.TextSize =
+        9
+
+    back.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    back.AutoButtonColor =
+        false
+
+    back.Parent =
+        getKeyPage
+
+    back.Activated:Connect(function()
+
+        showPage(
+            mainPage
+        )
+
+    end)
+
+    -- Key icon
+
+    local keyIcon =
+        Instance.new("Frame")
+
+    keyIcon.Size =
+        UDim2.fromOffset(
+            44,
+            44
+        )
+
+    keyIcon.Position =
+        UDim2.fromOffset(
+            17,
+            54
+        )
+
+    keyIcon.BackgroundColor3 =
+        CARD
+
+    keyIcon.BorderSizePixel =
+        0
+
+    keyIcon.Parent =
+        getKeyPage
+
+    rounded(
+        keyIcon,
+        7
+    )
+
+    stroke(
+        keyIcon,
+        BORDER_LIGHT,
+        0.45
+    )
+
+    local keyIconText =
+        makeLabel(
+            keyIcon,
+            "⚿",
+            UDim2.fromScale(
+                0,
+                0
+            ),
+            UDim2.fromScale(
+                1,
+                1
+            ),
+            21,
+            WHITE,
+            Enum.Font.Gotham
+        )
+
+    keyIconText.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    keyIconText.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    makeLabel(
+        getKeyPage,
+        "Get Your ZeHub Key",
+        UDim2.fromOffset(
+            72,
+            54
+        ),
+        UDim2.new(
+            1,
+            -90,
+            0,
+            22
+        ),
+        11,
+        WHITE,
+        Enum.Font.GothamBold
+    )
+
+    makeLabel(
+        getKeyPage,
+        "Follow the steps below to get your key from FlowAuth.",
+        UDim2.fromOffset(
+            72,
+            75
+        ),
+        UDim2.new(
+            1,
+            -90,
+            0,
+            18
+        ),
+        7,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+    -- Steps box
+
+    local stepsBox =
+        Instance.new("Frame")
+
+    stepsBox.Size =
+        UDim2.new(
+            1,
+            -34,
+            0,
+            174
+        )
+
+    stepsBox.Position =
+        UDim2.fromOffset(
+            17,
+            106
+        )
+
+    stepsBox.BackgroundColor3 =
+        PANEL_2
+
+    stepsBox.BackgroundTransparency =
+        0.05
+
+    stepsBox.BorderSizePixel =
+        0
+
+    stepsBox.Parent =
+        getKeyPage
+
+    rounded(
+        stepsBox,
+        8
+    )
+
+    stroke(
+        stepsBox,
+        BORDER,
+        0.45
+    )
+
+    local function keyStep(
+        number,
+        titleText,
+        subText,
+        y
+    )
+
+        local numberBox =
+            Instance.new("Frame")
+
+        numberBox.Size =
+            UDim2.fromOffset(
+                25,
+                25
+            )
+
+        numberBox.Position =
+            UDim2.fromOffset(
+                11,
+                y
+            )
+
+        numberBox.BackgroundColor3 =
+            CARD_HOVER
+
+        numberBox.BorderSizePixel =
+            0
+
+        numberBox.Parent =
+            stepsBox
+
+        rounded(
+            numberBox,
+            12
+        )
+
+        stroke(
+            numberBox,
+            BORDER_LIGHT,
+            0.45
+        )
+
+        local numberText =
+            makeLabel(
+                numberBox,
+                tostring(number),
+                UDim2.fromScale(
+                    0,
+                    0
+                ),
+                UDim2.fromScale(
+                    1,
+                    1
+                ),
+                8,
+                WHITE,
+                Enum.Font.GothamBold
+            )
+
+        numberText.TextXAlignment =
+            Enum.TextXAlignment.Center
+
+        numberText.TextYAlignment =
+            Enum.TextYAlignment.Center
+
+        makeLabel(
+            stepsBox,
+            titleText,
+            UDim2.fromOffset(
+                48,
+                y - 2
+            ),
+            UDim2.new(
+                1,
+                -60,
+                0,
+                17
+            ),
+            8,
+            TEXT,
+            Enum.Font.GothamBold
+        )
+
+        makeLabel(
+            stepsBox,
+            subText,
+            UDim2.fromOffset(
+                48,
+                y + 13
+            ),
+            UDim2.new(
+                1,
+                -60,
+                0,
+                15
+            ),
+            7,
+            MUTED,
+            Enum.Font.Gotham
+        )
+
+    end
+
+    keyStep(
+        1,
+        "Open the key page",
+        "Click the button below to open FlowAuth.",
+        11
+    )
+
+    keyStep(
+        2,
+        "Complete the required steps",
+        "Finish the verification process.",
+        49
+    )
+
+    keyStep(
+        3,
+        "Copy your generated key",
+        "You will receive your key after completion.",
+        87
+    )
+
+    keyStep(
+        4,
+        "Paste it into the key box",
+        "Return to the loader and enter your key.",
+        125
+    )
+
+    -- Link box
+
+    local linkBox =
+        Instance.new("TextLabel")
+
+    linkBox.Size =
+        UDim2.new(
+            1,
+            -34,
+            0,
+            32
+        )
+
+    linkBox.Position =
+        UDim2.fromOffset(
+            17,
+            290
+        )
+
+    linkBox.BackgroundColor3 =
+        INPUT
+
+    linkBox.BackgroundTransparency =
+        0.02
+
+    linkBox.BorderSizePixel =
+        0
+
+    linkBox.Text =
+        "  🔗  " .. GET_KEY_LINK
+
+    linkBox.TextColor3 =
+        MUTED
+
+    linkBox.Font =
+        Enum.Font.Gotham
+
+    linkBox.TextSize =
+        6.5
+
+    linkBox.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    linkBox.TextTruncate =
+        Enum.TextTruncate.AtEnd
+
+    linkBox.Parent =
+        getKeyPage
+
+    rounded(
+        linkBox,
+        6
+    )
+
+    stroke(
+        linkBox,
+        BORDER,
+        0.38
+    )
+
+    -- Open key page
+
+    local openKey =
+        Instance.new("TextButton")
+
+    openKey.Size =
+        UDim2.new(
+            0.63,
+            -6,
+            0,
+            34
+        )
+
+    openKey.Position =
+        UDim2.fromOffset(
+            17,
+            330
+        )
+
+    openKey.BackgroundColor3 =
+        CARD_HOVER
+
+    openKey.BorderSizePixel =
+        0
+
+    openKey.Text =
+        "OPEN KEY PAGE ↗"
+
+    openKey.TextColor3 =
+        WHITE
+
+    openKey.Font =
+        Enum.Font.GothamBold
+
+    openKey.TextSize =
+        8
+
+    openKey.AutoButtonColor =
+        false
+
+    openKey.Parent =
+        getKeyPage
+
+    rounded(
+        openKey,
+        6
+    )
+
+    stroke(
+        openKey,
+        BORDER_LIGHT,
+        0.35
+    )
+
+    openKey.MouseEnter:Connect(function()
+
+        openKey.BackgroundColor3 =
+            Color3.fromRGB(
+                26,
+                29,
+                33
+            )
+
+    end)
+
+    openKey.MouseLeave:Connect(function()
+
+        openKey.BackgroundColor3 =
+            CARD_HOVER
+
+    end)
+
+    openKey.Activated:Connect(function()
+
+        local opened, copied =
+            openLink(
+                GET_KEY_LINK
+            )
+
+        if copied then
+
+            notify(
+                "KEY LINK COPIED",
+                "FlowAuth link copied to clipboard.",
+                3
+            )
+
+        elseif opened then
+
+            notify(
+                "FLOWAUTH OPENED",
+                "Complete the steps and return here.",
+                3
+            )
+
+        else
+
+            notify(
+                "FLOWAUTH",
+                "Unable to open the key page.",
+                3
+            )
+
+        end
+
+    end)
+
+    -- Copy link
+
+    local copyKey =
+        Instance.new("TextButton")
+
+    copyKey.Size =
+        UDim2.new(
+            0.37,
+            -6,
+            0,
+            34
+        )
+
+    copyKey.Position =
+        UDim2.new(
+            0.63,
+            0,
+            0,
+            330
+        )
+
+    copyKey.BackgroundColor3 =
+        CARD
+
+    copyKey.BorderSizePixel =
+        0
+
+    copyKey.Text =
+        "▣  COPY LINK"
+
+    copyKey.TextColor3 =
+        TEXT
+
+    copyKey.Font =
+        Enum.Font.GothamBold
+
+    copyKey.TextSize =
+        8
+
+    copyKey.AutoButtonColor =
+        false
+
+    copyKey.Parent =
+        getKeyPage
+
+    rounded(
+        copyKey,
+        6
+    )
+
+    stroke(
+        copyKey,
+        BORDER,
+        0.35
+    )
+
+    copyKey.Activated:Connect(function()
+
+        if copyToClipboard(
+            GET_KEY_LINK
+        ) then
+
+            notify(
+                "KEY LINK COPIED",
+                "FlowAuth link copied to clipboard.",
+                3
+            )
+
+        end
+
+    end)
+
+end
+
+-- ============================================================================
+-- DISCORD PAGE
+-- ============================================================================
+
+do
+
+    local back =
+        Instance.new("TextButton")
+
+    back.Size =
+        UDim2.fromOffset(
+            95,
+            30
+        )
+
+    back.Position =
+        UDim2.fromOffset(
+            17,
+            14
+        )
+
+    back.BackgroundTransparency =
+        1
+
+    back.Text =
+        "‹  DISCORD"
+
+    back.TextColor3 =
+        TEXT
+
+    back.Font =
+        Enum.Font.GothamBold
+
+    back.TextSize =
+        9
+
+    back.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    back.AutoButtonColor =
+        false
+
+    back.Parent =
+        discordPage
+
+    back.Activated:Connect(function()
+
+        showPage(
+            mainPage
+        )
+
+    end)
+
+    -- Discord icon
+
+    local discordIcon =
+        Instance.new("Frame")
+
+    discordIcon.Size =
+        UDim2.fromOffset(
+            56,
+            56
+        )
+
+    discordIcon.Position =
+        UDim2.fromOffset(
+            17,
+            56
+        )
+
+    discordIcon.BackgroundColor3 =
+        CARD
+
+    discordIcon.BorderSizePixel =
+        0
+
+    discordIcon.Parent =
+        discordPage
+
+    rounded(
+        discordIcon,
+        8
+    )
+
+    stroke(
+        discordIcon,
+        BORDER_LIGHT,
+        0.45
+    )
+
+    local discordIconText =
+        makeLabel(
+            discordIcon,
+            "◉",
+            UDim2.fromScale(
+                0,
+                0
+            ),
+            UDim2.fromScale(
+                1,
+                1
+            ),
+            25,
+            WHITE,
+            Enum.Font.GothamBold
+        )
+
+    discordIconText.TextXAlignment =
+        Enum.TextXAlignment.Center
+
+    discordIconText.TextYAlignment =
+        Enum.TextYAlignment.Center
+
+    makeLabel(
+        discordPage,
+        "ZEHUB DISCORD",
+        UDim2.fromOffset(
+            88,
+            57
+        ),
+        UDim2.new(
+            1,
+            -105,
+            0,
+            22
+        ),
+        11,
+        WHITE,
+        Enum.Font.GothamBold
+    )
+
+    makeLabel(
+        discordPage,
+        "Join our Discord for updates, support, new scripts",
+        UDim2.fromOffset(
+            88,
+            78
+        ),
+        UDim2.new(
+            1,
+            -105,
+            0,
+            17
+        ),
+        7,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+    makeLabel(
+        discordPage,
+        "and key assistance.",
+        UDim2.fromOffset(
+            88,
+            91
+        ),
+        UDim2.new(
+            1,
+            -105,
+            0,
+            17
+        ),
+        7,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+    -- Features
+
+    local featureBox =
+        Instance.new("Frame")
+
+    featureBox.Size =
+        UDim2.new(
+            1,
+            -34,
+            0,
+            130
+        )
+
+    featureBox.Position =
+        UDim2.fromOffset(
+            17,
+            126
+        )
+
+    featureBox.BackgroundColor3 =
+        PANEL_2
+
+    featureBox.BackgroundTransparency =
+        0.05
+
+    featureBox.BorderSizePixel =
+        0
+
+    featureBox.Parent =
+        discordPage
+
+    rounded(
+        featureBox,
+        8
+    )
+
+    stroke(
+        featureBox,
+        BORDER,
+        0.45
+    )
+
+    local features = {
+        "Latest updates",
+        "Support & help",
+        "New scripts",
+        "Key assistance"
+    }
+
+    for i, textValue in
+        ipairs(features) do
+
+        local y =
+            16 + ((i - 1) * 25)
+
+        local check =
+            makeLabel(
+                featureBox,
+                "●",
+                UDim2.fromOffset(
+                    12,
+                    y
+                ),
+                UDim2.fromOffset(
+                    16,
+                    18
+                ),
+                9,
+                MUTED,
+                Enum.Font.GothamBold
+            )
+
+        check.TextXAlignment =
+            Enum.TextXAlignment.Center
+
+        makeLabel(
+            featureBox,
+            textValue,
+            UDim2.fromOffset(
+                34,
+                y
+            ),
+            UDim2.new(
+                1,
+                -45,
+                0,
+                18
+            ),
+            8,
+            TEXT,
+            Enum.Font.Gotham
+        )
+
+    end
+
+    -- Discord link
+
+    local discordLink =
+        Instance.new("TextLabel")
+
+    discordLink.Size =
+        UDim2.new(
+            1,
+            -34,
+            0,
+            32
+        )
+
+    discordLink.Position =
+        UDim2.fromOffset(
+            17,
+            267
+        )
+
+    discordLink.BackgroundColor3 =
+        INPUT
+
+    discordLink.BackgroundTransparency =
+        0.02
+
+    discordLink.BorderSizePixel =
+        0
+
+    discordLink.Text =
+        "  🔗  " .. DISCORD_LINK
+
+    discordLink.TextColor3 =
+        MUTED
+
+    discordLink.Font =
+        Enum.Font.Gotham
+
+    discordLink.TextSize =
+        7
+
+    discordLink.TextXAlignment =
+        Enum.TextXAlignment.Left
+
+    discordLink.TextTruncate =
+        Enum.TextTruncate.AtEnd
+
+    discordLink.Parent =
+        discordPage
+
+    rounded(
+        discordLink,
+        6
+    )
+
+    stroke(
+        discordLink,
+        BORDER,
+        0.38
+    )
+
+    -- Join button
+
+    local joinDiscord =
+        Instance.new("TextButton")
+
+    joinDiscord.Size =
+        UDim2.new(
+            0.63,
+            -6,
+            0,
+            34
+        )
+
+    joinDiscord.Position =
+        UDim2.fromOffset(
+            17,
+            307
+        )
+
+    joinDiscord.BackgroundColor3 =
+        CARD_HOVER
+
+    joinDiscord.BorderSizePixel =
+        0
+
+    joinDiscord.Text =
+        "JOIN DISCORD ↗"
+
+    joinDiscord.TextColor3 =
+        WHITE
+
+    joinDiscord.Font =
+        Enum.Font.GothamBold
+
+    joinDiscord.TextSize =
+        8
+
+    joinDiscord.AutoButtonColor =
+        false
+
+    joinDiscord.Parent =
+        discordPage
+
+    rounded(
+        joinDiscord,
+        6
+    )
+
+    stroke(
+        joinDiscord,
+        BORDER_LIGHT,
+        0.35
+    )
+
+    joinDiscord.MouseEnter:Connect(function()
+
+        joinDiscord.BackgroundColor3 =
+            Color3.fromRGB(
+                26,
+                29,
+                33
+            )
+
+    end)
+
+    joinDiscord.MouseLeave:Connect(function()
+
+        joinDiscord.BackgroundColor3 =
+            CARD_HOVER
+
+    end)
+
+    joinDiscord.Activated:Connect(function()
+
+        local opened, copied =
+            openLink(
+                DISCORD_LINK
+            )
+
+        if copied then
+
+            notify(
+                "DISCORD LINK COPIED",
+                "Discord invite copied to clipboard.",
+                3
+            )
+
+        elseif opened then
+
+            notify(
+                "DISCORD OPENED",
+                "Join the ZeHub Discord server.",
+                3
+            )
+
+        else
+
+            notify(
+                "DISCORD",
+                "Unable to open the invite.",
+                3
+            )
+
+        end
+
+    end)
+
+    -- Copy invite
+
+    local copyDiscord =
+        Instance.new("TextButton")
+
+    copyDiscord.Size =
+        UDim2.new(
+            0.37,
+            -6,
+            0,
+            34
+        )
+
+    copyDiscord.Position =
+        UDim2.new(
+            0.63,
+            0,
+            0,
+            307
+        )
+
+    copyDiscord.BackgroundColor3 =
+        CARD
+
+    copyDiscord.BorderSizePixel =
+        0
+
+    copyDiscord.Text =
+        "▣  COPY INVITE"
+
+    copyDiscord.TextColor3 =
+        TEXT
+
+    copyDiscord.Font =
+        Enum.Font.GothamBold
+
+    copyDiscord.TextSize =
+        8
+
+    copyDiscord.AutoButtonColor =
+        false
+
+    copyDiscord.Parent =
+        discordPage
+
+    rounded(
+        copyDiscord,
+        6
+    )
+
+    stroke(
+        copyDiscord,
+        BORDER,
+        0.35
+    )
+
+    copyDiscord.Activated:Connect(function()
+
+        if copyToClipboard(
+            DISCORD_LINK
+        ) then
+
+            notify(
+                "DISCORD LINK COPIED",
+                "Discord invite copied to clipboard.",
+                3
+            )
+
+        end
+
+    end)
+
+end
+
+-- ============================================================================
+-- NOTIFICATION HOLDER
+-- ============================================================================
+
+local notificationHolder =
+    Instance.new("Frame")
+
+notificationHolder.Size =
+    UDim2.fromOffset(
+        310,
+        300
+    )
+
+notificationHolder.Position =
+    UDim2.new(
+        0.5,
+        -155,
+        0,
+        15
+    )
+
+notificationHolder.BackgroundTransparency =
+    1
+
+notificationHolder.ZIndex =
+    100
+
+notificationHolder.Parent =
+    gui
+
+local notificationLayout =
+    Instance.new("UIListLayout")
+
+notificationLayout.HorizontalAlignment =
+    Enum.HorizontalAlignment.Center
+
+notificationLayout.VerticalAlignment =
+    Enum.VerticalAlignment.Top
+
+notificationLayout.Padding =
+    UDim.new(
+        0,
+        7
+    )
+
+notificationLayout.Parent =
+    notificationHolder
+
+-- ============================================================================
+-- NOTIFY
+-- ============================================================================
+
+function notify(
+    titleText,
+    messageText,
+    duration,
+    notificationType
+)
+
+    local notification =
+        Instance.new("Frame")
+
+    notification.Size =
+        UDim2.fromOffset(
+            285,
+            61
+        )
+
+    notification.BackgroundColor3 =
+        PANEL
+
+    notification.BackgroundTransparency =
+        0.03
+
+    notification.BorderSizePixel =
+        0
+
+    notification.ClipsDescendants =
+        true
+
+    notification.ZIndex =
+        100
+
+    notification.Parent =
+        notificationHolder
+
+    rounded(
+        notification,
+        8
+    )
+
+    stroke(
+        notification,
+        BORDER_LIGHT,
+        0.35
+    )
+
+    local bar =
+        Instance.new("Frame")
+
+    bar.Size =
+        UDim2.fromOffset(
+            3,
+            37
+        )
+
+    bar.Position =
+        UDim2.fromOffset(
+            10,
+            12
+        )
+
+    bar.BackgroundColor3 =
+        ACCENT
+
+    if notificationType ==
+        "error" then
+
+        bar.BackgroundColor3 =
+            ERROR
+
+    elseif notificationType ==
+        "success" then
+
+        bar.BackgroundColor3 =
+            SUCCESS
+
+    end
+
+    bar.BorderSizePixel =
+        0
+
+    bar.ZIndex =
+        101
+
+    bar.Parent =
+        notification
+
+    rounded(
+        bar,
+        2
+    )
+
+    makeLabel(
+        notification,
+        titleText,
+        UDim2.fromOffset(
+            23,
+            9
+        ),
+        UDim2.new(
+            1,
+            -34,
+            0,
+            18
+        ),
+        8,
+        WHITE,
+        Enum.Font.GothamBold
+    ).ZIndex =
+        101
+
+    makeLabel(
+        notification,
+        messageText,
+        UDim2.fromOffset(
+            23,
+            28
+        ),
+        UDim2.new(
+            1,
+            -34,
+            0,
+            25
+        ),
+        7,
+        MUTED,
+        Enum.Font.Gotham
+    ).ZIndex =
+        101
+
+    notification.Position =
+        UDim2.new(
+            0,
+            0,
+            0,
+            -75
+        )
+
+    tween(
+        notification,
+        {
+            Position =
+                UDim2.new(
+                    0,
+                    0,
+                    0,
+                    0
+                )
+        },
+        0.22
+    )
+
+    task.delay(
+        duration or 3,
+        function()
+
+            if not notification.Parent then
+                return
+            end
+
+            tween(
+                notification,
+                {
+                    Position =
+                        UDim2.new(
+                            0,
+                            0,
+                            0,
+                            -75
+                        ),
+                    BackgroundTransparency =
+                        1
+                },
+                0.20
+            )
+
+            task.delay(
+                0.25,
+                function()
+
+                    if notification
+                        and notification.Parent then
+
+                        notification:Destroy()
+
+                    end
+
+                end
+            )
+
+        end
+    )
+
+end
+
+-- ============================================================================
+-- AUTH OVERLAY
+-- ============================================================================
+
+local authOverlay =
+    Instance.new("Frame")
+
+authOverlay.Size =
+    UDim2.fromScale(
+        1,
+        1
+    )
+
+authOverlay.BackgroundColor3 =
+    BACKGROUND
+
+authOverlay.BackgroundTransparency =
+    0.08
+
+authOverlay.BorderSizePixel =
+    0
+
+authOverlay.Visible =
+    false
+
+authOverlay.ZIndex =
+    50
+
+authOverlay.Parent =
+    content
+
+-- ============================================================================
+-- AUTH CARD
+-- ============================================================================
+
+local authCard =
+    Instance.new("Frame")
+
+authCard.Size =
+    UDim2.fromOffset(
+        390,
+        270
+    )
+
+authCard.Position =
+    UDim2.fromScale(
+        0.5,
+        0.5
+    )
+
+authCard.AnchorPoint =
+    Vector2.new(
+        0.5,
+        0.5
+    )
+
+authCard.BackgroundColor3 =
+    PANEL
+
+authCard.BackgroundTransparency =
+    0.02
+
+authCard.BorderSizePixel =
+    0
+
+authCard.ZIndex =
+    51
+
+authCard.Parent =
+    authOverlay
+
+rounded(
+    authCard,
+    9
+)
+
+stroke(
+    authCard,
+    BORDER_LIGHT,
+    0.35
+)
+
+-- ============================================================================
+-- AUTH ICON
+-- ============================================================================
+
+local authIcon =
+    Instance.new("Frame")
+
+authIcon.Size =
+    UDim2.fromOffset(
+        54,
+        54
+    )
+
+authIcon.Position =
+    UDim2.new(
+        0.5,
+        -27,
+        0,
+        32
+    )
+
+authIcon.BackgroundColor3 =
+    CARD
+
+authIcon.BorderSizePixel =
+    0
+
+authIcon.ZIndex =
+    52
+
+authIcon.Parent =
+    authCard
+
+rounded(
+    authIcon,
+    27
+)
+
+stroke(
+    authIcon,
+    BORDER_LIGHT,
+    0.25
+)
+
+local authIconText =
+    makeLabel(
+        authIcon,
+        "◌",
+        UDim2.fromScale(
+            0,
+            0
+        ),
+        UDim2.fromScale(
+            1,
+            1
+        ),
+        27,
+        WHITE,
+        Enum.Font.Gotham
+    )
+
+authIconText.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+authIconText.TextYAlignment =
+    Enum.TextYAlignment.Center
+
+authIconText.ZIndex =
+    52
+
+-- ============================================================================
+-- AUTH TITLE
+-- ============================================================================
+
+local authTitle =
+    makeLabel(
+        authCard,
+        "AUTHORIZING ZEHUB",
+        UDim2.fromOffset(
+            20,
+            94
+        ),
+        UDim2.new(
+            1,
+            -40,
+            0,
+            25
+        ),
+        13,
+        WHITE,
+        Enum.Font.GothamBold
+    )
+
+authTitle.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+authTitle.ZIndex =
+    52
+
+local authSubtitle =
+    makeLabel(
+        authCard,
+        "Checking your access key...",
+        UDim2.fromOffset(
+            20,
+            120
+        ),
+        UDim2.new(
+            1,
+            -40,
+            0,
+            20
+        ),
+        8,
+        MUTED,
+        Enum.Font.Gotham
+    )
+
+authSubtitle.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+authSubtitle.ZIndex =
+    52
+
+-- ============================================================================
+-- AUTH PROGRESS
+-- ============================================================================
+
+local progressBack =
+    Instance.new("Frame")
+
+progressBack.Size =
+    UDim2.new(
+        1,
+        -100,
+        0,
+        3
+    )
+
+progressBack.Position =
+    UDim2.fromOffset(
+        50,
+        157
+    )
+
+progressBack.BackgroundColor3 =
+    BORDER
+
+progressBack.BorderSizePixel =
+    0
+
+progressBack.ZIndex =
+    52
+
+progressBack.Parent =
+    authCard
+
+rounded(
+    progressBack,
+    2
+)
+
+local progress =
+    Instance.new("Frame")
+
+progress.Size =
+    UDim2.new(
+        0,
+        0,
+        1,
+        0
+    )
+
+progress.BackgroundColor3 =
+    WHITE
+
+progress.BorderSizePixel =
+    0
+
+progress.ZIndex =
+    53
+
+progress.Parent =
+    progressBack
+
+rounded(
+    progress,
+    2
+)
+
+-- ============================================================================
+-- AUTH HINT
+-- ============================================================================
+
+local authHint =
+    makeLabel(
+        authCard,
+        "Verifying authentication with FlowAuth.",
+        UDim2.fromOffset(
+            20,
+            174
+        ),
+        UDim2.new(
+            1,
+            -40,
+            0,
+            20
+        ),
+        7,
+        DARK_MUTED,
+        Enum.Font.Gotham
+    )
+
+authHint.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+authHint.ZIndex =
+    52
+
+-- ============================================================================
+-- AUTH STATE
+-- ============================================================================
+
+local function showAuth(
+    titleText,
+    subtitleText,
+    icon,
+    iconColor,
+    progressValue,
+    hint
+)
+
+    authOverlay.Visible =
+        true
+
+    authTitle.Text =
+        titleText
+
+    authSubtitle.Text =
+        subtitleText
+
+    authIconText.Text =
+        icon
+
+    authIconText.TextColor3 =
+        iconColor or WHITE
+
+    authHint.Text =
+        hint or ""
+
+    tween(
+        progress,
+        {
+            Size =
+                UDim2.new(
+                    progressValue or 0,
+                    0,
+                    1,
+                    0
+                )
+        },
+        0.35
+    )
+
+end
+
+local function hideAuth()
+
+    authOverlay.Visible =
+        false
+
+end
+
+-- ============================================================================
+-- HEADER DISCORD
+-- ============================================================================
+
+headerDiscord.Activated:Connect(function()
 
     local opened, copied =
         openLink(
@@ -3001,37 +3745,18 @@ discordButton.Activated:Connect(function()
 
     if copied then
 
-        setStatusSuccess(
-            "DISCORD LINK COPIED  •  Invite copied to clipboard."
-        )
-
         notify(
             "DISCORD LINK COPIED",
-            "The ZeHub Discord invite was copied.",
-            3
+            "Discord invite copied to clipboard.",
+            3,
+            "success"
         )
 
     elseif opened then
 
-        setStatusNormal(
-            "DISCORD OPENED  •  Join the ZeHub server."
-        )
-
         notify(
-            "DISCORD",
-            "The Discord invite was opened.",
-            3
-        )
-
-    else
-
-        setStatusError(
-            "DISCORD  •  Unable to open the invite."
-        )
-
-        notify(
-            "DISCORD",
-            "Could not open the Discord invite.",
+            "DISCORD OPENED",
+            "Join the ZeHub Discord server.",
             3
         )
 
@@ -3040,83 +3765,13 @@ discordButton.Activated:Connect(function()
 end)
 
 -- ============================================================================
--- GET KEY
+-- LOAD SCRIPT
 -- ============================================================================
 
-getKeyButton.Activated:Connect(function()
+local authorizing =
+    false
 
-    setStatusLoading(
-        "OPENING FLOWAUTH  •  Preparing your key page..."
-    )
-
-    notify(
-        "GET KEY",
-        "Opening FlowAuth and copying the key link.",
-        2.5
-    )
-
-    local opened, copied =
-        openLink(
-            GET_KEY_LINK
-        )
-
-    if copied and opened then
-
-        setStatusSuccess(
-            "KEY LINK COPIED  •  FlowAuth opened in your browser."
-        )
-
-        notify(
-            "KEY LINK COPIED",
-            "The FlowAuth link is on your clipboard.",
-            3
-        )
-
-    elseif copied then
-
-        setStatusSuccess(
-            "KEY LINK COPIED  •  Paste it into your browser."
-        )
-
-        notify(
-            "KEY LINK COPIED",
-            "The FlowAuth link was copied.",
-            3
-        )
-
-    elseif opened then
-
-        setStatusNormal(
-            "FLOWAUTH OPENED  •  Complete the steps and copy your key."
-        )
-
-        notify(
-            "FLOWAUTH OPENED",
-            "Complete the key steps, then return here.",
-            3
-        )
-
-    else
-
-        setStatusError(
-            "FLOWAUTH  •  Unable to open the key page."
-        )
-
-        notify(
-            "FLOWAUTH",
-            "Could not open the key page.",
-            3
-        )
-
-    end
-
-end)
-
--- ============================================================================
--- LOAD / AUTHENTICATION
--- ============================================================================
-
-runButton.Activated:Connect(function()
+_G.ZeHubLoadButton.Activated:Connect(function()
 
     if authorizing then
         return
@@ -3124,7 +3779,7 @@ runButton.Activated:Connect(function()
 
     local key =
         tostring(
-            keyBox.Text or ""
+            _G.ZeHubKeyBox.Text or ""
         )
 
     key =
@@ -3139,149 +3794,114 @@ runButton.Activated:Connect(function()
             ""
         )
 
-    -- ========================================================================
-    -- EMPTY KEY
-    -- ========================================================================
+    -- Empty key
 
     if key == "" then
 
-        setStatusError(
-            "KEY REQUIRED  •  Enter your ZeHub key first."
+        setStatus(
+            "!",
+            "KEY REQUIRED  •  Enter your ZeHub key first.",
+            ERROR
         )
 
         notify(
             "KEY REQUIRED",
             "Enter your ZeHub key before loading.",
-            3
+            3,
+            "error"
         )
 
         return
 
     end
 
-    -- ========================================================================
-    -- NO SCRIPT
-    -- ========================================================================
-
-    if not selectedScript then
-
-        setStatusError(
-            "NO SCRIPT SELECTED  •  Select a supported game."
-        )
-
-        return
-
-    end
-
-    -- ========================================================================
-    -- COMING SOON
-    -- ========================================================================
+    -- Coming soon
 
     if selectedScript.Name ==
         "Coming Soon" then
 
-        setStatusError(
-            "COMING SOON  •  This game is not available yet."
+        setStatus(
+            "!",
+            "COMING SOON  •  This game is not available yet.",
+            ERROR
         )
 
         notify(
             "COMING SOON",
             "This script is not available yet.",
-            3
+            3,
+            "error"
         )
 
         return
 
     end
 
-    -- ========================================================================
-    -- BEGIN AUTHORIZATION
-    -- ========================================================================
+    -- Begin
 
     authorizing =
         true
 
-    runButton.Active =
+    _G.ZeHubLoadButton.Active =
         false
 
-    runButton.Text =
-        "◌   AUTHORIZING ZEHUB..."
+    _G.ZeHubLoadButton.Text =
+        "◌  AUTHORIZING ZEHUB"
 
-    setStatusLoading(
-        "AUTHORIZING ZEHUB  •  Checking your access key..."
+    setStatus(
+        "◌",
+        "AUTHORIZING ZEHUB  •  Checking your access key...",
+        WHITE
+    )
+
+    showAuth(
+        "AUTHORIZING ZEHUB",
+        "Checking your access key...",
+        "◌",
+        WHITE,
+        0.22,
+        "Verifying authentication with FlowAuth."
     )
 
     notify(
         "AUTHORIZING ZEHUB",
-        "Validating your key with FlowAuth.",
+        "Checking your access key.",
         2
     )
 
-    -- ========================================================================
-    -- SHOW AUTHORIZATION TAB
-    -- ========================================================================
-
-    showAuthOverlay()
-
-    authTitle.Text =
-        "AUTHORIZING ZEHUB"
-
-    authSubtitle.Text =
-        "Connecting to FlowAuth..."
-
-    authHint.Text =
-        "Do not close the loader while authorization is running."
-
-    authStep(
-        1,
-        "active"
+    task.wait(
+        0.35
     )
 
-    authStep(
-        2,
-        "idle"
+    -- Validating
+
+    showAuth(
+        "AUTHORIZING ZEHUB",
+        "Validating your access key...",
+        "◌",
+        WHITE,
+        0.58,
+        "Checking your key with FlowAuth."
     )
 
-    authStep(
-        3,
-        "idle"
+    setStatus(
+        "◌",
+        "AUTHORIZING ZEHUB  •  Validating your access key...",
+        WHITE
     )
-
-    -- ========================================================================
-    -- CONNECTION STEP
-    -- ========================================================================
 
     task.wait(
-        0.25
+        0.20
     )
 
-    authStep(
-        1,
-        "done"
-    )
-
-    authStep(
-        2,
-        "active"
-    )
-
-    authSubtitle.Text =
-        "Validating your access key..."
-
-    setStatusLoading(
-        "AUTHORIZING ZEHUB  •  Validating your access key..."
-    )
-
-    -- ========================================================================
-    -- FLOWAUTH LOADER
-    -- ========================================================================
+    -- Load FlowAuth loader
 
     local ok, success, message =
         pcall(function()
 
             local source =
                 game:HttpGet(
-                    "https://flowauth.net/v1/loaders/"
+                    FLOWAUTH_LOADER
                         .. selectedScript.Hash
                         .. ".lua"
                 )
@@ -3306,40 +3926,32 @@ runButton.Activated:Connect(function()
 
         end)
 
-    -- ========================================================================
-    -- LUA / HTTP ERROR
-    -- ========================================================================
+    -- HTTP / loader error
 
     if not ok then
 
         authorizing =
             false
 
-        runButton.Active =
+        _G.ZeHubLoadButton.Active =
             true
 
-        runButton.Text =
-            "LOAD SCRIPT                         ›"
+        _G.ZeHubLoadButton.Text =
+            "⚡  LOAD SCRIPT"
 
-        authTitle.Text =
-            "AUTHENTICATION FAILED"
-
-        authSubtitle.Text =
-            "The loader returned an error."
-
-        authHint.Text =
-            "Check your key and try again."
-
-        authStep(
-            2,
-            "idle"
+        showAuth(
+            "AUTHENTICATION FAILED",
+            "Unable to authenticate the loader.",
+            "!",
+            ERROR,
+            1,
+            "Please check your key and try again."
         )
 
-        setStatusError(
-            "AUTHENTICATION FAILED  •  "
-                .. tostring(
-                    success
-                )
+        setStatus(
+            "!",
+            "AUTHENTICATION FAILED  •  Loader error.",
+            ERROR
         )
 
         notify(
@@ -3347,56 +3959,48 @@ runButton.Activated:Connect(function()
             tostring(
                 success
             ),
-            4
+            4,
+            "error"
         )
 
         task.delay(
-            0.8,
-            hideAuthOverlay
+            1.2,
+            hideAuth
         )
 
         return
 
     end
 
-    -- ========================================================================
-    -- INVALID KEY
-    -- ========================================================================
+    -- Invalid key
 
     if success == false then
 
         authorizing =
             false
 
-        runButton.Active =
+        _G.ZeHubLoadButton.Active =
             true
 
-        runButton.Text =
-            "LOAD SCRIPT                         ›"
+        _G.ZeHubLoadButton.Text =
+            "⚡  LOAD SCRIPT"
 
-        authTitle.Text =
-            "INVALID KEY"
-
-        authSubtitle.Text =
+        showAuth(
+            "INVALID KEY",
             tostring(
                 message
                     or "The key is invalid or expired."
-            )
-
-        authHint.Text =
-            "Get a new key through FlowAuth and try again."
-
-        authStep(
-            2,
-            "idle"
+            ),
+            "!",
+            ERROR,
+            1,
+            "Get a new key and try again."
         )
 
-        setStatusError(
-            "INVALID KEY  •  "
-                .. tostring(
-                    message
-                        or "Invalid or expired key."
-                )
+        setStatus(
+            "!",
+            "INVALID KEY  •  The key is invalid or expired.",
+            ERROR
         )
 
         notify(
@@ -3405,88 +4009,100 @@ runButton.Activated:Connect(function()
                 message
                     or "The key is invalid or expired."
             ),
-            4
+            4,
+            "error"
         )
 
         task.delay(
-            0.8,
-            hideAuthOverlay
+            1.8,
+            hideAuth
         )
 
         return
 
     end
 
-    -- ========================================================================
-    -- ACCESS GRANTED
-    -- ========================================================================
+    -- Verified
 
-    authStep(
-        2,
-        "done"
-    )
-
-    authStep(
-        3,
-        "active"
-    )
-
-    authTitle.Text =
-        "ACCESS GRANTED"
-
-    authSubtitle.Text =
-        "Key verified successfully."
-
-    authHint.Text =
+    showAuth(
+        "KEY VERIFIED",
+        "Authentication successful.",
+        "✓",
+        SUCCESS,
+        0.82,
         "Loading "
             .. selectedScript.Name
             .. "..."
-
-    setStatusSuccess(
-        "ACCESS GRANTED  •  Key verified successfully."
     )
 
-    runButton.Text =
-        "✓   ACCESS GRANTED"
+    setStatus(
+        "✓",
+        "KEY VERIFIED  •  Authentication successful.",
+        SUCCESS
+    )
+
+    _G.ZeHubLoadButton.Text =
+        "✓  KEY VERIFIED"
 
     notify(
-        "ACCESS GRANTED",
-        "Key verified. Loading "
+        "KEY VERIFIED",
+        "Authentication successful.",
+        2.5,
+        "success"
+    )
+
+    task.wait(
+        0.75
+    )
+
+    -- Loading complete
+
+    showAuth(
+        "KEY VERIFIED",
+        "Authentication successful.",
+        "✓",
+        SUCCESS,
+        1,
+        "Loading "
+            .. selectedScript.Name
+            .. "..."
+    )
+
+    setStatus(
+        "✓",
+        "Loading "
             .. selectedScript.Name
             .. "...",
-        2
-    )
-
-    -- ========================================================================
-    -- LOADING
-    -- ========================================================================
-
-    task.wait(
-        0.65
-    )
-
-    authStep(
-        3,
-        "done"
-    )
-
-    authTitle.Text =
-        "LOADED"
-
-    authSubtitle.Text =
-        selectedScript.Name
-            .. " loaded successfully."
-
-    authHint.Text =
-        "ZeHub authorization completed."
-
-    setStatusSuccess(
-        selectedScript.Name
-            .. " loaded successfully!"
+        SUCCESS
     )
 
     task.wait(
-        0.45
+        0.55
+    )
+
+    -- Final success
+
+    showAuth(
+        "KEY VERIFIED",
+        "Authentication successful.",
+        "✓",
+        SUCCESS,
+        1,
+        "Loading "
+            .. selectedScript.Name
+            .. "..."
+    )
+
+    notify(
+        "SCRIPT LOADED",
+        selectedScript.Name
+            .. " loaded successfully.",
+        2.5,
+        "success"
+    )
+
+    task.wait(
+        0.55
     )
 
     if gui
@@ -3515,18 +4131,19 @@ minimizeButton.Activated:Connect(function()
         body.Visible =
             false
 
-        headerLine.Visible =
+        headerBottom.Visible =
             false
 
-        frame:TweenSize(
-            UDim2.fromOffset(
-                680,
-                118
-            ),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quint,
-            0.25,
-            true
+        tween(
+            frame,
+            {
+                Size =
+                    UDim2.fromOffset(
+                        760,
+                        72
+                    )
+            },
+            0.25
         )
 
         minimizeButton.Text =
@@ -3537,18 +4154,19 @@ minimizeButton.Activated:Connect(function()
         body.Visible =
             true
 
-        headerLine.Visible =
+        headerBottom.Visible =
             true
 
-        frame:TweenSize(
-            UDim2.fromOffset(
-                680,
-                430
-            ),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quint,
-            0.25,
-            true
+        tween(
+            frame,
+            {
+                Size =
+                    UDim2.fromOffset(
+                        760,
+                        500
+                    )
+            },
+            0.25
         )
 
         minimizeButton.Text =
@@ -3568,34 +4186,15 @@ local dragging =
 local dragStart
 local startPosition
 
-local function updateDrag(
-    input
-)
-
-    local delta =
-        input.Position
-            - dragStart
-
-    frame.Position =
-        UDim2.new(
-            startPosition.X.Scale,
-            startPosition.X.Offset
-                + delta.X,
-            startPosition.Y.Scale,
-            startPosition.Y.Offset
-                + delta.Y
-        )
-
-end
-
 header.InputBegan:Connect(function(
     input
 )
 
     if input.UserInputType ==
         Enum.UserInputType.MouseButton1
-        or input.UserInputType ==
-        Enum.UserInputType.Touch then
+        or
+        input.UserInputType ==
+            Enum.UserInputType.Touch then
 
         dragging =
             true
@@ -3626,39 +4225,46 @@ UserInputService.InputChanged:Connect(function(
     input
 )
 
-    if dragging
-        and (
-            input.UserInputType ==
-                Enum.UserInputType.MouseMovement
-            or
-            input.UserInputType ==
-                Enum.UserInputType.Touch
-        ) then
+    if not dragging then
+        return
+    end
 
-        updateDrag(
-            input
-        )
+    if input.UserInputType ==
+        Enum.UserInputType.MouseMovement
+        or
+        input.UserInputType ==
+            Enum.UserInputType.Touch then
+
+        local delta =
+            input.Position
+                - dragStart
+
+        frame.Position =
+            UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset
+                    + delta.X,
+                startPosition.Y.Scale,
+                startPosition.Y.Offset
+                    + delta.Y
+            )
 
     end
 
 end)
 
 -- ============================================================================
--- FINAL READY STATE
+-- READY
 -- ============================================================================
 
 task.defer(function()
 
     task.wait(
-        0.2
+        0.25
     )
 
     if gui
         and gui.Parent then
-
-        setStatusNormal(
-            "Ready. Enter your access key to continue."
-        )
 
         notify(
             "ZEHUB READY",

@@ -102,7 +102,7 @@ local Scripts = {
     },
 
     {
-        Name = "Loot To Grab",
+        Name = "Loot To Forge",
         Short = "L",
         Description = "Get key & load script",
         Hash = "a315f0a408a8a08b7eace4550185adcb"
@@ -110,7 +110,7 @@ local Scripts = {
 
 }
 
-local selectedScript = Scripts[1]
+local selectedScript = Scripts[3]
 
 -- ============================================================================
 -- REMOVE OLD UI

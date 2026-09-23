@@ -10,18 +10,14 @@ local FLOWAUTH_UI_URL =
     "https://flowauth.net/v1/ui/748f0ff5458570ecd6d79bcac8253c5a.lua"
 
 local FLOWAUTH_LOADER_HASH = "2f8015eedaf4c092d6afc919837270de"
-
--- Optional: replace with your ZeHub Discord invite.
-local ZEHUB_DISCORD_URL = "https://discord.gg/zehub"
 local FLOWAUTH_LOADER_URL =
     "https://flowauth.net/v1/loaders/" .. FLOWAUTH_LOADER_HASH .. ".lua"
 
--- FlowAuth-compatible entry point. The key is supplied by the outer
--- FlowAuth loader; the protected payload itself does not need to verify it
--- again.
-local function FlowAuthLoader(key)
-    return key
-end
+-- FlowAuth-compatible entry point. The chunk must return a callable loader
+-- function. This prevents loadstring(... )() from attempting to call nil.
+-- The verified key is received by this function from the outer FlowAuth UI.
+return function(key)
+    local FLOWAUTH_KEY = key
 
 -- ZeHub Runaways - Standalone Integrated Build
 -- The previous embedded Runaways UI has been removed and replaced with
@@ -220,18 +216,11 @@ local gui = create("ScreenGui", {
 })
 gui.Enabled = false
 
--- ZeHub responsive scaling: the whole window scales to the available viewport
--- while keeping the internal layout proportions intact.
-local responsiveScale = create("UIScale", {
-    Scale = 1,
-    Parent = gui
-})
-
-local BASE_WIDTH = 900
-local BASE_HEIGHT = 600
+local BASE_WIDTH = 500
+local BASE_HEIGHT = 430
 local TOPBAR_HEIGHT = 48
-local SIDEBAR_COLLAPSED = 0
-local SIDEBAR_EXPANDED = 0
+local SIDEBAR_COLLAPSED = 58
+local SIDEBAR_EXPANDED = 150
 local CONTENT_GAP = 12
 local PAGE_HEADER_HEIGHT = 26
 local SECTION_BAR_HEIGHT = 34
@@ -281,7 +270,6 @@ local menuButton = create("TextButton", {
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
     AutoButtonColor = false,
-    Visible = false,
     Text = "≡",
     TextColor3 = Theme.Muted,
     Font = Enum.Font.GothamBold,
@@ -403,12 +391,10 @@ local topLine = create("Frame", {
     Parent = topbar
 })
 
-local TABBAR_HEIGHT = 54
-
 local sidebar = create("Frame", {
-    Name = "TopTabs",
+    Name = "Sidebar",
     Position = UDim2.fromOffset(0, TOPBAR_HEIGHT),
-    Size = UDim2.new(1, 0, 0, TABBAR_HEIGHT),
+    Size = UDim2.new(0, SIDEBAR_COLLAPSED, 1, -TOPBAR_HEIGHT),
     BackgroundColor3 = Theme.Sidebar,
     BorderSizePixel = 0,
     ClipsDescendants = true,
@@ -416,34 +402,31 @@ local sidebar = create("Frame", {
 })
 
 local sidebarLine = create("Frame", {
-    AnchorPoint = Vector2.new(0, 1),
-    Position = UDim2.new(0, 0, 1, 0),
-    Size = UDim2.new(1, 0, 0, 1),
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, 0, 0, 0),
+    Size = UDim2.new(0, 1, 1, 0),
     BackgroundColor3 = Theme.Border,
     BorderSizePixel = 0,
     Parent = sidebar
 })
 
 local navHolder = create("Frame", {
-    Position = UDim2.fromOffset(12, 6),
-    Size = UDim2.new(1, -24, 1, -12),
+    Position = UDim2.fromOffset(5, 7),
+    Size = UDim2.new(1, -10, 1, -14),
     BackgroundTransparency = 1,
     Parent = sidebar
 })
 
 create("UIListLayout", {
-    FillDirection = Enum.FillDirection.Horizontal,
-    HorizontalAlignment = Enum.HorizontalAlignment.Center,
-    VerticalAlignment = Enum.VerticalAlignment.Center,
-    Padding = UDim.new(0, 8),
+    Padding = UDim.new(0, 5),
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = navHolder
 })
 
 local content = create("Frame", {
     Name = "Content",
-    Position = UDim2.fromOffset(CONTENT_GAP, TOPBAR_HEIGHT + TABBAR_HEIGHT + CONTENT_GAP),
-    Size = UDim2.new(1, -(CONTENT_GAP * 2), 1, -(TOPBAR_HEIGHT + TABBAR_HEIGHT + CONTENT_GAP * 2)),
+    Position = UDim2.fromOffset(SIDEBAR_COLLAPSED + CONTENT_GAP, TOPBAR_HEIGHT + CONTENT_GAP),
+    Size = UDim2.new(1, -(SIDEBAR_COLLAPSED + CONTENT_GAP * 2), 1, -(TOPBAR_HEIGHT + CONTENT_GAP * 2)),
     BackgroundTransparency = 1,
     ClipsDescendants = true,
     Parent = main
@@ -738,7 +721,7 @@ local function createPage(name, iconAsset)
 
     local navButton = create("TextButton", {
         Name = "Nav_" .. name,
-        Size = UDim2.fromOffset(150, 40),
+        Size = UDim2.new(1, 0, 0, 36),
         BackgroundColor3 = Theme.Topbar,
         BorderSizePixel = 0,
         Text = "",
@@ -750,7 +733,7 @@ local function createPage(name, iconAsset)
     local indicator = create("Frame", {
         AnchorPoint = Vector2.new(0, 0.5),
         Position = UDim2.new(0, 0, 0.5, 0),
-        Size = UDim2.fromOffset(3, 24),
+        Size = UDim2.fromOffset(2, 18),
         BackgroundColor3 = Theme.Text,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -760,7 +743,7 @@ local function createPage(name, iconAsset)
 
     local iconHolder = create("Frame", {
         AnchorPoint = Vector2.new(0, 0.5),
-        Position = UDim2.new(0, 9, 0.5, 0),
+        Position = UDim2.new(0, 5, 0.5, 0),
         Size = UDim2.fromOffset(28, 28),
         BackgroundColor3 = Theme.Input,
         BackgroundTransparency = 1,
@@ -773,13 +756,13 @@ local function createPage(name, iconAsset)
     local glyph = createNavGlyph(iconHolder, iconAsset or name)
 
     local label = create("TextLabel", {
-        Position = UDim2.fromOffset(45, 0),
-        Size = UDim2.new(1, -51, 1, 0),
+        Position = UDim2.fromOffset(40, 0),
+        Size = UDim2.new(1, -45, 1, 0),
         BackgroundTransparency = 1,
         Text = name,
         TextColor3 = Theme.Muted,
         TextTransparency = sidebarExpanded and 0 or 1,
-        TextSize = 11,
+        TextSize = 10,
         Font = Enum.Font.GothamSemibold,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
@@ -1842,10 +1825,10 @@ local function featureCard(parent, titleText, items)
 end
 
 local function updateSidebarGeometry(instant)
-    local tabbarHeight = TABBAR_HEIGHT
-    local sidebarTarget = UDim2.new(1, 0, 0, tabbarHeight)
-    local contentPosition = UDim2.fromOffset(CONTENT_GAP, TOPBAR_HEIGHT + tabbarHeight + CONTENT_GAP)
-    local contentSize = UDim2.new(1, -(CONTENT_GAP * 2), 1, -(TOPBAR_HEIGHT + tabbarHeight + CONTENT_GAP * 2))
+    local sidebarWidth = sidebarExpanded and SIDEBAR_EXPANDED or SIDEBAR_COLLAPSED
+    local sidebarTarget = UDim2.new(0, sidebarWidth, 1, -TOPBAR_HEIGHT)
+    local contentPosition = UDim2.fromOffset(sidebarWidth + CONTENT_GAP, TOPBAR_HEIGHT + CONTENT_GAP)
+    local contentSize = UDim2.new(1, -(sidebarWidth + CONTENT_GAP * 2), 1, -(TOPBAR_HEIGHT + CONTENT_GAP * 2))
 
     if instant then
         sidebar.Size = sidebarTarget
@@ -1857,7 +1840,7 @@ local function updateSidebarGeometry(instant)
     end
 
     for _, data in pairs(sideButtons) do
-        tween(data.Label, {TextTransparency = 0}, instant and 0 or 0.1)
+        tween(data.Label, {TextTransparency = sidebarExpanded and 0 or 1}, instant and 0 or 0.1)
     end
 end
 
@@ -1901,31 +1884,18 @@ end
 
 local function updateResponsiveSize(instant)
     local camera = workspace.CurrentCamera
-    local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
-
-    -- ZeHub auto-scaling: preserve the 900x600 design proportions while
-    -- fitting inside the current viewport with safe margins.
-    local scaleX = (viewport.X * 0.88) / BASE_WIDTH
-    local scaleY = (viewport.Y * 0.84) / BASE_HEIGHT
-    local targetScale = math.clamp(math.min(scaleX, scaleY), 0.58, 1.35)
-
-    local function applyScale()
-        responsiveScale.Scale = targetScale
-        if minimized then
-            main.Size = UDim2.fromOffset(BASE_WIDTH, TOPBAR_HEIGHT)
-        else
-            main.Size = UDim2.fromOffset(BASE_WIDTH, BASE_HEIGHT)
-        end
-        updateSidebarGeometry(true)
-    end
+    local viewport = camera and camera.ViewportSize or Vector2.new(BASE_WIDTH + 40, BASE_HEIGHT + 40)
+    local width = math.min(BASE_WIDTH, math.max(330, viewport.X - 20))
+    local height = math.min(BASE_HEIGHT, math.max(300, viewport.Y - 30))
+    local target = minimized and UDim2.fromOffset(width, TOPBAR_HEIGHT) or UDim2.fromOffset(width, height)
 
     if instant then
-        applyScale()
+        main.Size = target
     else
-        responsiveScale.Scale = targetScale
-        tween(main, {Size = minimized and UDim2.fromOffset(BASE_WIDTH, TOPBAR_HEIGHT) or UDim2.fromOffset(BASE_WIDTH, BASE_HEIGHT)}, 0.14)
-        updateSidebarGeometry(false)
+        tween(main, {Size = target}, 0.14)
     end
+
+    updateSidebarGeometry(instant)
 end
 
 local function setMinimized(value)
@@ -3117,65 +3087,21 @@ utility:StartNoclipLoop()
 -- ============================================================================
 local Window = Library:CreateWindow({
     Title = "ZeHub",
-    Subtitle = "ZeHub Access • Runaways",
-    Width = 900,
-    Height = 600,
+    Subtitle = "Runaways",
+    Width = 500,
+    Height = 430,
     Theme = "Dark",
     MinimizeButton = true,
     ThemeButton = true,
     CloseButton = true
 })
 
--- ZeHub loader navigation: exactly two top-level tabs.
-local KeyTab = Window:CreateTab({Name = "Key", Icon = "Settings"})
-local KeyedScriptsTab = Window:CreateTab({Name = "Keyed Scripts", Icon = "Home"})
-
--- Existing Runaways controls remain available under the Keyed Scripts tab.
-local MainTab = KeyedScriptsTab
-local FireTab = KeyedScriptsTab
-local VehTab = KeyedScriptsTab
-local EspTab = KeyedScriptsTab
-local TpTab = KeyedScriptsTab
-local PlayerTab = KeyedScriptsTab
-
-local KeySection = KeyTab:CreateSection({Name = "ZEHUB ACCESS"})
-KeySection:CreateButton({
-    Name = "GET KEY",
-    Callback = function()
-        if setclipboard then
-            pcall(setclipboard, FLOWAUTH_UI_URL)
-        end
-    end
-})
-KeySection:CreateButton({
-    Name = "LOAD SCRIPT",
-    Callback = function()
-        Window:SelectTab("Keyed Scripts")
-    end
-})
-KeySection:CreateButton({
-    Name = "JOIN DISCORD",
-    Callback = function()
-        -- ZeHub Discord invite. Copy it when the executor exposes clipboard support.
-        if ZEHUB_DISCORD_URL and ZEHUB_DISCORD_URL ~= "" then
-            if setclipboard then
-                pcall(setclipboard, "discord.gg/zehub")
-            elseif toclipboard then
-                pcall(toclipboard, "discord.gg/zehub")
-            elseif request then
-                pcall(function()
-                    request({Url = ZEHUB_DISCORD_URL, Method = "GET"})
-                end)
-            end
-        end
-    end
-})
-
-local KeyStatus = KeyTab:CreateSection({Name = "STATUS"})
-KeyStatus:CreateButton({
-    Name = "FlowAuth Protected Loader Connected",
-    Callback = function() end
-})
+local MainTab = Window:CreateTab({Name = "Main", Icon = "Home"})
+local FireTab = Window:CreateTab({Name = "Firearms", Icon = "Farm"})
+local VehTab = Window:CreateTab({Name = "Vehicle", Icon = "Events"})
+local EspTab = Window:CreateTab({Name = "ESP", Icon = "Eye"})
+local TpTab = Window:CreateTab({Name = "Teleports", Icon = "Stats"})
+local PlayerTab = Window:CreateTab({Name = "Player", Icon = "Settings"})
 
 local KillSection = MainTab:CreateSection({Name = "KILL AURA ACTIONS"})
 KillSection:CreateToggle({
@@ -3387,5 +3313,5 @@ print("RightCtrl = UI Toggle (library)")
 print("========================================")
 
 -- FlowAuth protected loader completed successfully.
--- Return the actual loader entry point for the caller.
-return FlowAuthLoader
+return true
+end

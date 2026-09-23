@@ -244,14 +244,6 @@ local main = create("Frame", {
 corner(main, 7)
 local mainStroke = stroke(main, Theme.BorderBright, 0.35)
 
--- Keep the original UI dimensions/design intact while scaling the entire window
--- proportionally on smaller screens. This avoids squashing individual controls.
-local uiScale = create("UIScale", {
-    Name = "AutoScale",
-    Scale = 1,
-    Parent = main
-})
-
 local topbar = create("Frame", {
     Name = "Topbar",
     Size = UDim2.new(1, 0, 0, TOPBAR_HEIGHT),
@@ -1894,19 +1886,17 @@ end
 local function updateResponsiveSize(instant)
     local camera = workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize or Vector2.new(BASE_WIDTH + 40, BASE_HEIGHT + 40)
+    local width = math.min(BASE_WIDTH, math.max(330, viewport.X - 20))
+    local height = math.min(BASE_HEIGHT, math.max(300, viewport.Y - 30))
+    local target = minimized and UDim2.fromOffset(width, TOPBAR_HEIGHT) or UDim2.fromOffset(width, height)
 
-    -- Scale the complete window as one unit so fonts, buttons, spacing and
-    -- hitboxes stay proportional to the original design on every viewport.
-    local availableWidth = math.max(1, viewport.X - 20)
-    local availableHeight = math.max(1, viewport.Y - 30)
-    local fitScale = math.min(1, availableWidth / BASE_WIDTH, availableHeight / BASE_HEIGHT)
-    local scale = math.max(0.55, fitScale)
+    if instant then
+        main.Size = target
+    else
+        tween(main, {Size = target}, 0.14)
+    end
 
-    uiScale.Scale = scale
-    main.Size = minimized and UDim2.fromOffset(BASE_WIDTH, TOPBAR_HEIGHT)
-        or UDim2.fromOffset(BASE_WIDTH, BASE_HEIGHT)
-
-    updateSidebarGeometry(true)
+    updateSidebarGeometry(instant)
 end
 
 local function setMinimized(value)

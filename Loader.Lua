@@ -102,10 +102,10 @@ local Scripts = {
     },
 
     {
-        Name = "Coming Soon",
-        Short = "?",
-        Description = "Stay tuned...",
-        Hash = "BLOXFRUITS_HASH_HERE"
+        Name = "Loot To Grab",
+        Short = "L",
+        Description = "Get key & load script",
+        Hash = "a315f0a408a8a08b7eace4550185adcb"
     }
 
 }

@@ -12,7 +12,7 @@ local FLOWAUTH_UI_URL =
 local FLOWAUTH_LOADER_HASH = "2f8015eedaf4c092d6afc919837270de"
 
 -- Optional: replace with your ZeHub Discord invite.
-local ZEHUB_DISCORD_URL = ""
+local ZEHUB_DISCORD_URL = "https://discord.gg/zehub"
 local FLOWAUTH_LOADER_URL =
     "https://flowauth.net/v1/loaders/" .. FLOWAUTH_LOADER_HASH .. ".lua"
 
@@ -1903,10 +1903,11 @@ local function updateResponsiveSize(instant)
     local camera = workspace.CurrentCamera
     local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
 
-    -- Scale from a 900x600 design reference while keeping safe margins.
+    -- ZeHub auto-scaling: preserve the 900x600 design proportions while
+    -- fitting inside the current viewport with safe margins.
     local scaleX = (viewport.X * 0.88) / BASE_WIDTH
     local scaleY = (viewport.Y * 0.84) / BASE_HEIGHT
-    local targetScale = math.clamp(math.min(scaleX, scaleY), 0.58, 1.28)
+    local targetScale = math.clamp(math.min(scaleX, scaleY), 0.58, 1.35)
 
     local function applyScale()
         responsiveScale.Scale = targetScale
@@ -3155,9 +3156,17 @@ KeySection:CreateButton({
 KeySection:CreateButton({
     Name = "JOIN DISCORD",
     Callback = function()
-        -- Set ZEHUB_DISCORD_URL below when you have your invite URL.
-        if ZEHUB_DISCORD_URL and ZEHUB_DISCORD_URL ~= "" and request then
-            pcall(function() request({Url = ZEHUB_DISCORD_URL, Method = "GET"}) end)
+        -- ZeHub Discord invite. Copy it when the executor exposes clipboard support.
+        if ZEHUB_DISCORD_URL and ZEHUB_DISCORD_URL ~= "" then
+            if setclipboard then
+                pcall(setclipboard, "discord.gg/zehub")
+            elseif toclipboard then
+                pcall(toclipboard, "discord.gg/zehub")
+            elseif request then
+                pcall(function()
+                    request({Url = ZEHUB_DISCORD_URL, Method = "GET"})
+                end)
+            end
         end
     end
 })
@@ -3378,4 +3387,5 @@ print("RightCtrl = UI Toggle (library)")
 print("========================================")
 
 -- FlowAuth protected loader completed successfully.
-return true
+-- Return the actual loader entry point for the caller.
+return FlowAuthLoader

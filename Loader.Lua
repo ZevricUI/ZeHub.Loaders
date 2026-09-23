@@ -22,6 +22,46 @@ local Scripts = {
 
 local selectedScript = Scripts[1]
 
+-- Optional executor file persistence.
+-- If writefile/readfile are unavailable, the loader still works normally.
+local KEY_FILE = "ZeHub_Key.txt"
+
+local function saveKey(key)
+    if typeof(writefile) ~= "function" then
+        return false
+    end
+
+    local ok = pcall(function()
+        writefile(KEY_FILE, key)
+    end)
+
+    return ok
+end
+
+local function loadSavedKey()
+    if typeof(isfile) ~= "function" or typeof(readfile) ~= "function" then
+        return nil
+    end
+
+    local ok, exists = pcall(function()
+        return isfile(KEY_FILE)
+    end)
+
+    if not ok or not exists then
+        return nil
+    end
+
+    local readOk, value = pcall(function()
+        return readfile(KEY_FILE)
+    end)
+
+    if readOk and type(value) == "string" and value ~= "" then
+        return value
+    end
+
+    return nil
+end
+
 local old = playerGui:FindFirstChild("ZeHub")
 if old then
     old:Destroy()
@@ -148,6 +188,11 @@ keyBox.Font = Enum.Font.Gotham
 keyBox.TextSize = 13
 keyBox.ClearTextOnFocus = false
 keyBox.Parent = content
+
+local savedKey = loadSavedKey()
+if savedKey then
+    keyBox.Text = savedKey
+end
 
 Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 7)
 
@@ -280,6 +325,10 @@ if buttons[1] then
     buttons[1].BackgroundTransparency = 0.84
 end
 
+if savedKey then
+    status.Text = "Saved key restored."
+end
+
 -- Open the supplied key page.
 getKey.Activated:Connect(function()
     local ok = pcall(function()
@@ -316,6 +365,11 @@ runButton.Activated:Connect(function()
     end
 
     status.Text = "Loading " .. selectedScript.Name .. "..."
+    runButton.Active = false
+    runButton.Text = "LOADING..."
+
+    -- Remember the key for the next execution when the environment supports file storage.
+    saveKey(key)
 
     local ok, success, message = pcall(function()
         local source = game:HttpGet(
@@ -332,14 +386,24 @@ runButton.Activated:Connect(function()
     end)
 
     if not ok then
+        runButton.Active = true
+        runButton.Text = "LOAD SELECTED"
         status.Text = "Loader error: " .. tostring(success)
         return
     end
 
     if success == false then
+        runButton.Active = true
+        runButton.Text = "LOAD SELECTED"
         status.Text = message or "Invalid key."
         return
     end
 
     status.Text = selectedScript.Name .. " loaded!"
+
+    -- Once the selected script has loaded successfully, remove the ZeHub loader UI.
+    task.wait(0.35)
+    if gui and gui.Parent then
+        gui:Destroy()
+    end
 end)

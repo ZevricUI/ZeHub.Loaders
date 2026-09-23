@@ -1,4 +1,4 @@
-
+-- ============================================================================
 -- FLOWAUTH CONFIGURATION
 -- This file is intended to be the protected Runaways payload used by FlowAuth.
 -- The outer FlowAuth UI verifies the user's key and calls this payload as
@@ -7,9 +7,9 @@
 -- ============================================================================
 
 local FLOWAUTH_UI_URL =
-    "https://flowauth.net/v1/ui/748f0ff5458570ecd6d79bcac8253c5a.lua"
+    "https://flowauth.net/v1/ui/465ea7165cc765fb6d66c312f98a2bc4.lua"
 
-local FLOWAUTH_LOADER_HASH = "2f8015eedaf4c092d6afc919837270de"
+local FLOWAUTH_LOADER_HASH = "95257bff957772ebbe918833738a8fea"
 local FLOWAUTH_LOADER_URL =
     "https://flowauth.net/v1/loaders/" .. FLOWAUTH_LOADER_HASH .. ".lua"
 

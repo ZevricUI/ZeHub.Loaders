@@ -1,4 +1,4 @@
--- ============================================================================
+
 -- FLOWAUTH CONFIGURATION
 -- This file is intended to be the protected Runaways payload used by FlowAuth.
 -- The outer FlowAuth UI verifies the user's key and calls this payload as

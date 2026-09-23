@@ -13,12 +13,11 @@ local FLOWAUTH_LOADER_HASH = "2f8015eedaf4c092d6afc919837270de"
 local FLOWAUTH_LOADER_URL =
     "https://flowauth.net/v1/loaders/" .. FLOWAUTH_LOADER_HASH .. ".lua"
 
--- FlowAuth-compatible entry point. The key is supplied by the outer
--- FlowAuth loader; the protected payload itself does not need to verify it
--- again.
-local function FlowAuthLoader(key)
-    return key
-end
+-- FlowAuth-compatible entry point. The chunk must return a callable loader
+-- function. This prevents loadstring(... )() from attempting to call nil.
+-- The verified key is received by this function from the outer FlowAuth UI.
+return function(key)
+    local FLOWAUTH_KEY = key
 
 -- ZeHub Runaways - Standalone Integrated Build
 -- The previous embedded Runaways UI has been removed and replaced with
@@ -3315,3 +3314,4 @@ print("========================================")
 
 -- FlowAuth protected loader completed successfully.
 return true
+end

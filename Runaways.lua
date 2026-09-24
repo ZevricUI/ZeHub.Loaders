@@ -1,8 +1,89 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+
+-- ============================================================
+-- ZeHub Logging
+-- ============================================================
+-- IMPORTANT:
+-- Keep your Discord webhook PRIVATE.
+-- This URL should point to your own webhook relay.
+--
+-- Example:
+-- https://your-domain.com/zehub/log
+--
+-- The relay receives the event and sends it to Discord.
+-- ============================================================
+
+local LOG_RELAY_URL = "https://discord.com/api/webhooks/1551208355387678792/OlQmfbbRnhHKcgTVP8zhBBpcr5Wrvj8U9QSkMvt8hV6bXdmlmQCE3MLe1Nu_GPpYyOWP"
+
+local SESSION_ID = HttpService:GenerateGUID(false)
+
+local function getRequestFunction()
+    return
+        (syn and syn.request)
+        or (http and http.request)
+        or http_request
+        or request
+end
+
+local function sendLog(eventName, details, scriptName)
+    if not LOG_RELAY_URL
+        or LOG_RELAY_URL == ""
+        or LOG_RELAY_URL == "YOUR_LOG_RELAY_URL" then
+        return
+    end
+
+    local requestFunction = getRequestFunction()
+
+    if not requestFunction then
+        return
+    end
+
+    local payload = {
+        event = tostring(eventName),
+
+        username = tostring(player.Name),
+        displayName = tostring(player.DisplayName),
+        userId = tostring(player.UserId),
+
+        gameName = tostring(game.Name),
+        gameId = tostring(game.GameId),
+        placeId = tostring(game.PlaceId),
+
+        script = tostring(scriptName or "Unknown"),
+        sessionId = tostring(SESSION_ID),
+
+        details = tostring(details or ""),
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }
+
+    local ok, body = pcall(function()
+        return HttpService:JSONEncode(payload)
+    end)
+
+    if not ok then
+        return
+    end
+
+    task.spawn(function()
+        pcall(function()
+            requestFunction({
+                Url = LOG_RELAY_URL,
+                Method = "POST",
+
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+
+                Body = body
+            })
+        end)
+    end)
+end
 
 -- ZeHub projects / FlowAuth loaders
 local Scripts = {
@@ -21,6 +102,13 @@ local Scripts = {
 }
 
 local selectedScript = Scripts[1]
+
+-- Log initial execution
+sendLog(
+    "SCRIPT_EXECUTED",
+    "ZeHub loader started.",
+    selectedScript.Name
+)
 
 -- Optional executor file persistence.
 -- If writefile/readfile are unavailable, the loader still works normally.
@@ -63,6 +151,7 @@ local function loadSavedKey()
 end
 
 local old = playerGui:FindFirstChild("ZeHub")
+
 if old then
     old:Destroy()
 end
@@ -97,19 +186,31 @@ scale.Parent = frame
 
 local function updateScale()
     local camera = workspace.CurrentCamera
-    if not camera then return end
+
+    if not camera then
+        return
+    end
 
     local viewport = camera.ViewportSize
+
     local sx = viewport.X / 520
     local sy = viewport.Y / 360
-    local s = math.clamp(math.min(sx, sy), 0.72, 1.18)
+
+    local s = math.clamp(
+        math.min(sx, sy),
+        0.72,
+        1.18
+    )
+
     scale.Scale = s
 end
 
 updateScale()
 
 if workspace.CurrentCamera then
-    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+    workspace.CurrentCamera
+        :GetPropertyChangedSignal("ViewportSize")
+        :Connect(updateScale)
 end
 
 local title = Instance.new("TextLabel")
@@ -190,6 +291,7 @@ keyBox.ClearTextOnFocus = false
 keyBox.Parent = content
 
 local savedKey = loadSavedKey()
+
 if savedKey then
     keyBox.Text = savedKey
 end
@@ -294,6 +396,7 @@ end
 
 for _, scriptData in ipairs(Scripts) do
     local button = Instance.new("TextButton")
+
     button.Size = UDim2.new(1, -16, 0, 38)
     button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     button.BackgroundTransparency = 0.94
@@ -331,78 +434,165 @@ end
 
 -- Open the supplied key page.
 getKey.Activated:Connect(function()
+
     local ok = pcall(function()
         if setclipboard then
             setclipboard("discord.gg/zehub")
         end
     end)
 
-    status.Text = ok and "Key link copied. Open it in your browser." or "Use the Get Key link below."
+    status.Text =
+        ok
+        and "Key link copied. Open it in your browser."
+        or "Use the Get Key link below."
+
+    sendLog(
+        "GET_KEY_CLICKED",
+        "User clicked GET KEY.",
+        selectedScript.Name
+    )
 end)
 
 -- Copy the Discord invite for easy access.
 discord.Activated:Connect(function()
+
     local ok = pcall(function()
         if setclipboard then
             setclipboard("discord.gg/zehub")
         end
     end)
 
-    status.Text = ok and "Discord invite copied." or "Discord: discord.gg/zehub"
+    status.Text =
+        ok
+        and "Discord invite copied."
+        or "Discord: discord.gg/zehub"
+
+    sendLog(
+        "DISCORD_CLICKED",
+        "User clicked the Discord button.",
+        selectedScript.Name
+    )
 end)
 
 runButton.Activated:Connect(function()
+
     local key = keyBox.Text
 
     if key == "" then
+
         status.Text = "Enter a key first."
+
+        sendLog(
+            "KEY_FAILED",
+            "Reason: No key entered.",
+            selectedScript.Name
+        )
+
         return
     end
 
     if not selectedScript then
+
         status.Text = "Select a script."
+
+        sendLog(
+            "KEY_FAILED",
+            "Reason: No script selected.",
+            "Unknown"
+        )
+
         return
     end
 
-    status.Text = "Loading " .. selectedScript.Name .. "..."
+    status.Text =
+        "Loading " .. selectedScript.Name .. "..."
+
     runButton.Active = false
     runButton.Text = "LOADING..."
 
-    -- Remember the key for the next execution when the environment supports file storage.
+    -- Remember the key for the next execution
+    -- when the environment supports file storage.
     saveKey(key)
 
+    -- Log that validation has started.
+    sendLog(
+        "KEY_VALIDATION_STARTED",
+        "FlowAuth validation started.",
+        selectedScript.Name
+    )
+
     local ok, success, message = pcall(function()
+
         local source = game:HttpGet(
-            "https://flowauth.net/v1/loaders/" .. selectedScript.Hash .. ".lua"
+            "https://flowauth.net/v1/loaders/"
+                .. selectedScript.Hash
+                .. ".lua"
         )
 
         local loader, loadError = loadstring(source)
 
         if not loader then
-            error(loadError or "Failed to compile loader.")
+            error(
+                loadError
+                or "Failed to compile loader."
+            )
         end
 
         return loader(key)
     end)
 
     if not ok then
+
         runButton.Active = true
         runButton.Text = "LOAD SELECTED"
-        status.Text = "Loader error: " .. tostring(success)
+
+        status.Text =
+            "Loader error: "
+            .. tostring(success)
+
+        sendLog(
+            "LOADER_ERROR",
+            "Error: " .. tostring(success),
+            selectedScript.Name
+        )
+
         return
     end
 
     if success == false then
+
         runButton.Active = true
         runButton.Text = "LOAD SELECTED"
-        status.Text = message or "Invalid key."
+
+        status.Text =
+            message
+            or "Invalid key."
+
+        sendLog(
+            "KEY_FAILED",
+            "FlowAuth rejected the key.\nReason: "
+                .. tostring(message or "Invalid key"),
+            selectedScript.Name
+        )
+
         return
     end
 
-    status.Text = selectedScript.Name .. " loaded!"
+    -- Successful validation/load.
+    sendLog(
+        "KEY_ACCEPTED",
+        "FlowAuth accepted the key and the script loaded successfully.",
+        selectedScript.Name
+    )
 
-    -- Once the selected script has loaded successfully, remove the ZeHub loader UI.
+    status.Text =
+        selectedScript.Name
+        .. " loaded!"
+
+    -- Once the selected script has loaded successfully,
+    -- remove the ZeHub loader UI.
     task.wait(0.35)
+
     if gui and gui.Parent then
         gui:Destroy()
     end

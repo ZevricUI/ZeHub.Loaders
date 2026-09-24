@@ -18,7 +18,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 -- The relay receives the event and sends it to Discord.
 -- ============================================================
 
-local LOG_RELAY_URL = "https://discord.com/api/webhooks/1551208355387678792/OlQmfbbRnhHKcgTVP8zhBBpcr5Wrvj8U9QSkMvt8hV6bXdmlmQCE3MLe1Nu_GPpYyOWP"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1551208355387678792/OlQmfbbRnhHKcgTVP8zhBBpcr5Wrvj8U9QSkMvt8hV6bXdmlmQCE3MLe1Nu_GPpYyOWP"
 
 local SESSION_ID = HttpService:GenerateGUID(false)
 

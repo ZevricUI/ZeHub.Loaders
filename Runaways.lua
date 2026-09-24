@@ -15,17 +15,17 @@ local Scripts = {
     {
         Name = "Loot The Forge",
         Hash = "a315f0a408a8a08b7eace4550185adcb",
-        Webhook = "YOUR_LOOT_THE_FORGE_WEBHOOK"
+        Webhook = "https://discord.com/api/webhooks/1552817999482986607/d-oUj3_bfBiWzfIKSYjOG9hp0ZlAJS5ogsAiQteB_8HCpv0qX8lnOoFDk93Vn-qhuXYE"
     },
     {
         Name = "Rivals",
         Hash = "99468e8b743345db35bfac9d99632320",
-        Webhook = "YOUR_RIVALS_WEBHOOK"
+        Webhook = "https://discord.com/api/webhooks/1552818155015897111/4kTq941pwL2ZOY51VtEG6S5oZrC-KN_4hFtFfQZ7V5lddAwohdfoWXGrGibjHh898u-D"
     },
     {
         Name = "Runaways",
         Hash = "2f8015eedaf4c092d6afc919837270de",
-        Webhook = "YOUR_RUNAWAYS_WEBHOOK"
+        Webhook = "https://discord.com/api/webhooks/1552818085805957163/GzYsTrGDp9UGS9sgRepAwLNL0h0Lr6EebfglR6RENzabqdqEXdb7VZdOYSwwW6jIoHcD"
     }
 }
 

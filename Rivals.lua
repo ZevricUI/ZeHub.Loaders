@@ -333,7 +333,7 @@ end
 getKey.Activated:Connect(function()
     local ok = pcall(function()
         if setclipboard then
-            setclipboard("https://flowauth.net/reward/95257bff957772ebbe918833738a8fea")
+            setclipboard("discord.gg/zehub")
         end
     end)
 

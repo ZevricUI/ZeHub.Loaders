@@ -19,7 +19,7 @@ local KEY_FILE = "ZeHub_Key.txt"
 local DISCORD = "discord.gg/zehub"
 
 local KEY_URL =
-    "discord.gg/zehub"
+    "https://flowauth.net/reward/95257bff957772ebbe918833738a8fea"
 
 --==================================================
 -- SCRIPTS
@@ -29,53 +29,37 @@ local Scripts = {
 
     {
         Name = "Loot The Forge",
+        Hash = "a315f0a408a8a08b7eace4550185adcb",
 
-        Hash =
-            "a315f0a408a8a08b7eace4550185adcb",
-
-        -- IMPORTANT:
-        -- Do not paste the old exposed webhook here.
-        -- Rotate it first.
-        Webhook = "https://discord.com/api/webhooks/1552817999482986607/d-oUj3_bfBiWzfIKSYjOG9hp0ZlAJS5ogsAiQteB_8HCpv0qX8lnOoFDk93Vn-qhuXYE"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     },
 
     {
         Name = "Rivals",
+        Hash = "99468e8b743345db35bfac9d99632320",
 
-        Hash =
-            "99468e8b743345db35bfac9d99632320",
-
-        Webhook = "https://discord.com/api/webhooks/1552818155015897111/4kTq941pwL2ZOY51VtEG6S5oZrC-KN_4hFtFfQZ7V5lddAwohdfoWXGrGibjHh898u-D"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     },
 
     {
         Name = "Runaways",
+        Hash = "2f8015eedaf4c092d6afc919837270de",
 
-        Hash =
-            "2f8015eedaf4c092d6afc919837270de",
-
-        Webhook = "https://discord.com/api/webhooks/1552818085805957163/GzYsTrGDp9UGS9sgRepAwLNL0h0Lr6EebfglR6RENzabqdqEXdb7VZdOYSwwW6jIoHcD"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     }
 }
 
 --==================================================
--- OPTIONAL PLACE ID AUTO DETECTION
+-- OPTIONAL PLACE ID DETECTION
 --==================================================
--- Add your actual PlaceIds here.
---
--- Example:
---
--- [123456789] = "Rivals",
---
--- Leave empty if you do not want automatic
--- PlaceId selection.
 
 local PLACE_IDS = {
-
-    -- [YOUR_LOOT_THE_FORGE_PLACE_ID] = "Loot The Forge",
-    -- [YOUR_RIVALS_PLACE_ID] = "Rivals",
-    -- [YOUR_RUNAWAYS_PLACE_ID] = "Runaways"
-
+    -- [123456789] = "Loot The Forge",
+    -- [123456789] = "Rivals",
+    -- [123456789] = "Runaways"
 }
 
 --==================================================
@@ -83,23 +67,17 @@ local PLACE_IDS = {
 --==================================================
 
 local EVENT_COLORS = {
-
     SCRIPT_SELECTED = 0x8B5CF6,
-
     SCRIPT_EXECUTED = 0x5865F2,
 
     GET_KEY_CLICKED = 0x3498DB,
-
     DISCORD_CLICKED = 0x3498DB,
 
     KEY_VALIDATION_STARTED = 0xF1C40F,
-
     KEY_ACCEPTED = 0x2ECC71,
-
     KEY_FAILED = 0xE74C3C,
 
     LOADER_ERROR = 0xE74C3C
-
 }
 
 --==================================================
@@ -107,27 +85,21 @@ local EVENT_COLORS = {
 --==================================================
 
 local EVENT_EMOJIS = {
-
     SCRIPT_SELECTED = "📜",
-
     SCRIPT_EXECUTED = "🚀",
 
     GET_KEY_CLICKED = "🔑",
-
     DISCORD_CLICKED = "💬",
 
     KEY_VALIDATION_STARTED = "🔐",
-
     KEY_ACCEPTED = "✅",
-
     KEY_FAILED = "❌",
 
     LOADER_ERROR = "⚠️"
-
 }
 
 --==================================================
--- DUPLICATE EVENT PROTECTION
+-- DUPLICATE PROTECTION
 --==================================================
 
 local recentEvents = {}
@@ -155,26 +127,15 @@ local function generateEventId()
     local guid =
         HttpService:GenerateGUID(false)
 
-    return
-        "EVT-"
-        .. string.upper(
-            guid:gsub("-", ""):sub(1, 8)
-        )
+    return "EVT-" .. string.upper(
+        guid:gsub("-", ""):sub(1, 8)
+    )
 
 end
 
 --==================================================
 -- WEBHOOK LOGGER
 --==================================================
--- This intentionally does NOT send:
--- UserId
--- Account age
--- JobId
--- Player profile
--- Avatar
---
--- Keep Discord webhooks off the client where possible.
--- A server-side webhook relay is safer.
 
 local function sendLog(
     webhook,
@@ -186,10 +147,8 @@ local function sendLog(
     if type(webhook) ~= "string"
         or webhook == ""
         or webhook:find("YOUR_")
-        then
-
+    then
         return
-
     end
 
     local requestFunction =
@@ -198,6 +157,10 @@ local function sendLog(
     if not requestFunction then
         return
     end
+
+    --==================================================
+    -- DUPLICATE PROTECTION
+    --==================================================
 
     local duplicateKey =
         tostring(eventName)
@@ -211,19 +174,72 @@ local function sendLog(
 
     if recentEvents[duplicateKey]
         and currentTime
-            - recentEvents[duplicateKey]
-            < 2
-        then
-
+            - recentEvents[duplicateKey] < 2
+    then
         return
-
     end
 
     recentEvents[duplicateKey] =
         currentTime
 
+    --==================================================
+    -- PLAYER DATA
+    --==================================================
+
+    local username =
+        player.Name
+
+    local displayName =
+        player.DisplayName
+
+    local userId =
+        player.UserId
+
+    local accountAge =
+        "Unknown"
+
+    pcall(function()
+
+        accountAge =
+            tostring(
+                player.AccountAge
+            )
+            .. " days"
+
+    end)
+
+    --==================================================
+    -- GAME DATA
+    --==================================================
+
+    local gameName =
+        game.Name
+
+    local placeId =
+        game.PlaceId
+
+    local universeId =
+        game.GameId
+
+    local jobId =
+        game.JobId
+
+    if jobId == "" then
+
+        jobId =
+            "Studio / No Job ID"
+
+    end
+
+    --==================================================
+    -- OTHER DATA
+    --==================================================
+
     local eventId =
         generateEventId()
+
+    local timestamp =
+        os.time()
 
     local emoji =
         EVENT_EMOJIS[eventName]
@@ -233,9 +249,25 @@ local function sendLog(
         EVENT_COLORS[eventName]
         or 0x8B5CF6
 
+    local profileUrl =
+        "https://www.roblox.com/users/"
+        .. tostring(userId)
+        .. "/profile"
+
+    local avatarUrl =
+        "https://www.roblox.com/headshot-thumbnail/image?userId="
+        .. tostring(userId)
+        .. "&width=150&height=150&format=png"
+
+    --==================================================
+    -- ORIGINAL EMBED INFORMATION
+    --==================================================
+
     local payload = {
 
         username = "ZeHub Logger",
+
+        avatar_url = avatarUrl,
 
         embeds = {{
 
@@ -258,8 +290,100 @@ local function sendLog(
 
             color = color,
 
+            url = profileUrl,
+
+            thumbnail = {
+                url = avatarUrl
+            },
+
             fields = {
 
+                -- PLAYER
+                {
+                    name = "👤 Player",
+
+                    value =
+                        "**"
+                        .. tostring(
+                            displayName
+                        )
+                        .. "**\n"
+                        .. "`"
+                        .. tostring(
+                            username
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                {
+                    name = "🆔 User ID",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            userId
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                {
+                    name = "📅 Account Age",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            accountAge
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                -- GAME
+                {
+                    name = "🎮 Game",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            gameName
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                {
+                    name = "📍 Place ID",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            placeId
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                {
+                    name = "🌐 Universe ID",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            universeId
+                        )
+                        .. "`",
+
+                    inline = true
+                },
+
+                -- SCRIPT
                 {
                     name = "📜 Script",
 
@@ -275,7 +399,7 @@ local function sendLog(
                 },
 
                 {
-                    name = "📦 Loader",
+                    name = "📦 Loader Version",
 
                     value =
                         "`"
@@ -300,8 +424,9 @@ local function sendLog(
                     inline = true
                 },
 
+                -- SESSION
                 {
-                    name = "🔗 Session",
+                    name = "🔗 Session ID",
 
                     value =
                         "`"
@@ -314,7 +439,20 @@ local function sendLog(
                 },
 
                 {
-                    name = "🆔 Event",
+                    name = "🖥️ Server Job ID",
+
+                    value =
+                        "`"
+                        .. tostring(
+                            jobId
+                        )
+                        .. "`",
+
+                    inline = false
+                },
+
+                {
+                    name = "🆔 Event ID",
 
                     value =
                         "`"
@@ -327,14 +465,25 @@ local function sendLog(
                 },
 
                 {
-                    name = "🎮 Game",
+                    name = "🕐 Time",
 
                     value =
-                        "`"
+                        "<t:"
                         .. tostring(
-                            game.Name
+                            timestamp
                         )
-                        .. "`",
+                        .. ":F>",
+
+                    inline = true
+                },
+
+                {
+                    name = "🔎 Profile",
+
+                    value =
+                        "[View Roblox Profile]("
+                        .. profileUrl
+                        .. ")",
 
                     inline = true
                 }
@@ -342,13 +491,12 @@ local function sendLog(
             },
 
             footer = {
-
                 text =
-                    "ZeHub Loader • "
+                    "ZeHub Logging • "
                     .. tostring(
-                        LOADER_VERSION
+                        scriptName
+                        or "Unknown"
                     )
-
             },
 
             timestamp =
@@ -360,9 +508,13 @@ local function sendLog(
 
     }
 
+    --==================================================
+    -- ENCODE
+    --==================================================
+
     local body
 
-    local success =
+    local encodeSuccess =
         pcall(function()
 
             body =
@@ -372,13 +524,15 @@ local function sendLog(
 
         end)
 
-    if not success
+    if not encodeSuccess
         or not body
-        then
-
+    then
         return
-
     end
+
+    --==================================================
+    -- SEND
+    --==================================================
 
     task.spawn(function()
 
@@ -391,10 +545,8 @@ local function sendLog(
                 Method = "POST",
 
                 Headers = {
-
                     ["Content-Type"] =
                         "application/json"
-
                 },
 
                 Body = body
@@ -434,7 +586,7 @@ pcall(function()
 
     if isfile
         and isfile(KEY_FILE)
-        then
+    then
 
         savedKey =
             readfile(
@@ -512,7 +664,7 @@ workspace.CurrentCamera
     )
 
 --==================================================
--- MAIN
+-- MAIN FRAME
 --==================================================
 
 local Main =
@@ -539,22 +691,22 @@ Main.AnchorPoint =
         0.5
     )
 
+-- MORE TRANSPARENT
 Main.BackgroundColor3 =
     Color3.fromRGB(
-        3,
-        3,
-        3
+        5,
+        5,
+        5
     )
+
+Main.BackgroundTransparency =
+    0.14
 
 Main.BorderSizePixel =
     0
 
 Main.Parent =
     ScreenGui
-
---==================================================
--- MAIN CORNER
---==================================================
 
 local MainCorner =
     Instance.new("UICorner")
@@ -567,10 +719,6 @@ MainCorner.CornerRadius =
 
 MainCorner.Parent =
     Main
-
---==================================================
--- MAIN STROKE
---==================================================
 
 local MainStroke =
     Instance.new("UIStroke")
@@ -586,7 +734,7 @@ MainStroke.Thickness =
     1
 
 MainStroke.Transparency =
-    0.78
+    0.82
 
 MainStroke.Parent =
     Main
@@ -600,12 +748,6 @@ local TopBar =
 
 TopBar.BackgroundTransparency =
     1
-
-TopBar.Position =
-    UDim2.fromOffset(
-        0,
-        0
-    )
 
 TopBar.Size =
     UDim2.new(
@@ -656,6 +798,10 @@ Title.TextColor3 =
 Title.TextSize =
     23
 
+-- NO TEXT GLOW
+Title.TextStrokeTransparency =
+    1
+
 Title.TextXAlignment =
     Enum.TextXAlignment.Left
 
@@ -692,13 +838,16 @@ Subtitle.Text =
 
 Subtitle.TextColor3 =
     Color3.fromRGB(
-        125,
-        125,
-        125
+        130,
+        130,
+        130
     )
 
 Subtitle.TextSize =
     10
+
+Subtitle.TextStrokeTransparency =
+    1
 
 Subtitle.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -744,13 +893,16 @@ Version.Text =
 
 Version.TextColor3 =
     Color3.fromRGB(
-        105,
-        105,
-        105
+        110,
+        110,
+        110
     )
 
 Version.TextSize =
     9
+
+Version.TextStrokeTransparency =
+    1
 
 Version.TextXAlignment =
     Enum.TextXAlignment.Right
@@ -787,10 +939,13 @@ CloseButton.Size =
 
 CloseButton.BackgroundColor3 =
     Color3.fromRGB(
-        12,
-        12,
-        12
+        35,
+        35,
+        35
     )
+
+CloseButton.BackgroundTransparency =
+    0.25
 
 CloseButton.BorderSizePixel =
     0
@@ -806,13 +961,16 @@ CloseButton.Text =
 
 CloseButton.TextColor3 =
     Color3.fromRGB(
-        180,
-        180,
-        180
+        220,
+        220,
+        220
     )
 
 CloseButton.TextSize =
     17
+
+CloseButton.TextStrokeTransparency =
+    1
 
 CloseButton.Parent =
     TopBar
@@ -833,22 +991,13 @@ CloseButton.MouseEnter:Connect(function()
 
     TweenService:Create(
         CloseButton,
-        TweenInfo.new(
-            0.15
-        ),
+        TweenInfo.new(0.15),
         {
             BackgroundColor3 =
                 Color3.fromRGB(
-                    40,
-                    40,
-                    40
-                ),
-
-            TextColor3 =
-                Color3.fromRGB(
-                    255,
-                    255,
-                    255
+                    65,
+                    65,
+                    65
                 )
         }
     ):Play()
@@ -859,22 +1008,13 @@ CloseButton.MouseLeave:Connect(function()
 
     TweenService:Create(
         CloseButton,
-        TweenInfo.new(
-            0.15
-        ),
+        TweenInfo.new(0.15),
         {
             BackgroundColor3 =
                 Color3.fromRGB(
-                    12,
-                    12,
-                    12
-                ),
-
-            TextColor3 =
-                Color3.fromRGB(
-                    180,
-                    180,
-                    180
+                    35,
+                    35,
+                    35
                 )
         }
     ):Play()
@@ -895,15 +1035,13 @@ local dragging = false
 local dragStart
 local startPosition
 
-TopBar.InputBegan:Connect(function(
-    input
-)
+TopBar.InputBegan:Connect(function(input)
 
     if input.UserInputType
         == Enum.UserInputType.MouseButton1
         or input.UserInputType
         == Enum.UserInputType.Touch
-        then
+    then
 
         dragging = true
 
@@ -913,25 +1051,25 @@ TopBar.InputBegan:Connect(function(
         startPosition =
             Main.Position
 
-        input.Changed:Connect(function()
+        input.Changed:Connect(
+            function()
 
-            if input.UserInputState
-                == Enum.UserInputState.End
+                if input.UserInputState
+                    == Enum.UserInputState.End
                 then
 
-                dragging = false
+                    dragging = false
+
+                end
 
             end
-
-        end)
+        )
 
     end
 
 end)
 
-UIS.InputChanged:Connect(function(
-    input
-)
+UIS.InputChanged:Connect(function(input)
 
     if not dragging then
         return
@@ -941,7 +1079,7 @@ UIS.InputChanged:Connect(function(
         ~= Enum.UserInputType.MouseMovement
         and input.UserInputType
         ~= Enum.UserInputType.Touch
-        then
+    then
 
         return
 
@@ -954,12 +1092,9 @@ UIS.InputChanged:Connect(function(
     Main.Position =
         UDim2.new(
             startPosition.X.Scale,
-            startPosition.X.Offset
-                + delta.X,
-
+            startPosition.X.Offset + delta.X,
             startPosition.Y.Scale,
-            startPosition.Y.Offset
-                + delta.Y
+            startPosition.Y.Offset + delta.Y
         )
 
 end)
@@ -973,10 +1108,13 @@ local Sidebar =
 
 Sidebar.BackgroundColor3 =
     Color3.fromRGB(
-        8,
-        8,
-        8
+        18,
+        18,
+        18
     )
+
+Sidebar.BackgroundTransparency =
+    0.16
 
 Sidebar.BorderSizePixel =
     0
@@ -1013,13 +1151,16 @@ local SidebarStroke =
 
 SidebarStroke.Color =
     Color3.fromRGB(
-        35,
-        35,
-        35
+        65,
+        65,
+        65
     )
 
 SidebarStroke.Thickness =
     1
+
+SidebarStroke.Transparency =
+    0.5
 
 SidebarStroke.Parent =
     Sidebar
@@ -1054,13 +1195,16 @@ SidebarTitle.Text =
 
 SidebarTitle.TextColor3 =
     Color3.fromRGB(
-        175,
-        175,
-        175
+        190,
+        190,
+        190
     )
 
 SidebarTitle.TextSize =
     10
+
+SidebarTitle.TextStrokeTransparency =
+    1
 
 SidebarTitle.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -1128,6 +1272,9 @@ SelectedLabel.TextColor3 =
 SelectedLabel.TextSize =
     17
 
+SelectedLabel.TextStrokeTransparency =
+    1
+
 SelectedLabel.TextXAlignment =
     Enum.TextXAlignment.Left
 
@@ -1164,13 +1311,16 @@ SelectedSubtitle.Text =
 
 SelectedSubtitle.TextColor3 =
     Color3.fromRGB(
-        110,
-        110,
-        110
+        115,
+        115,
+        115
     )
 
 SelectedSubtitle.TextSize =
     9
+
+SelectedSubtitle.TextStrokeTransparency =
+    1
 
 SelectedSubtitle.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -1181,6 +1331,7 @@ SelectedSubtitle.Parent =
 --==================================================
 -- KEY BOX
 --==================================================
+-- Intentionally lighter than the main UI.
 
 local KeyBox =
     Instance.new("TextBox")
@@ -1199,10 +1350,13 @@ KeyBox.Size =
 
 KeyBox.BackgroundColor3 =
     Color3.fromRGB(
-        7,
-        7,
-        7
+        32,
+        32,
+        32
     )
+
+KeyBox.BackgroundTransparency =
+    0.08
 
 KeyBox.BorderSizePixel =
     0
@@ -1218,9 +1372,9 @@ KeyBox.PlaceholderText =
 
 KeyBox.PlaceholderColor3 =
     Color3.fromRGB(
-        90,
-        90,
-        90
+        125,
+        125,
+        125
     )
 
 KeyBox.Text =
@@ -1235,6 +1389,9 @@ KeyBox.TextColor3 =
 
 KeyBox.TextSize =
     11
+
+KeyBox.TextStrokeTransparency =
+    1
 
 KeyBox.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -1277,13 +1434,16 @@ local KeyStroke =
 
 KeyStroke.Color =
     Color3.fromRGB(
-        40,
-        40,
-        40
+        75,
+        75,
+        75
     )
 
 KeyStroke.Thickness =
     1
+
+KeyStroke.Transparency =
+    0.25
 
 KeyStroke.Parent =
     KeyBox
@@ -1292,15 +1452,13 @@ KeyBox.Focused:Connect(function()
 
     TweenService:Create(
         KeyStroke,
-        TweenInfo.new(
-            0.15
-        ),
+        TweenInfo.new(0.15),
         {
             Color =
                 Color3.fromRGB(
-                    120,
-                    120,
-                    120
+                    125,
+                    125,
+                    125
                 )
         }
     ):Play()
@@ -1311,15 +1469,13 @@ KeyBox.FocusLost:Connect(function()
 
     TweenService:Create(
         KeyStroke,
-        TweenInfo.new(
-            0.15
-        ),
+        TweenInfo.new(0.15),
         {
             Color =
                 Color3.fromRGB(
-                    40,
-                    40,
-                    40
+                    75,
+                    75,
+                    75
                 )
         }
     ):Play()
@@ -1356,13 +1512,16 @@ Status.Text =
 
 Status.TextColor3 =
     Color3.fromRGB(
-        135,
-        135,
-        135
+        145,
+        145,
+        145
     )
 
 Status.TextSize =
     10
+
+Status.TextStrokeTransparency =
+    1
 
 Status.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -1374,7 +1533,7 @@ Status.Parent =
     Content
 
 --==================================================
--- STATUS FUNCTION
+-- STATUS
 --==================================================
 
 local function setStatus(
@@ -1387,16 +1546,16 @@ local function setStatus(
 
     local color =
         Color3.fromRGB(
-            135,
-            135,
-            135
+            145,
+            145,
+            145
         )
 
     if statusType == "success" then
 
         color =
             Color3.fromRGB(
-                70,
+                75,
                 220,
                 130
             )
@@ -1406,8 +1565,8 @@ local function setStatus(
         color =
             Color3.fromRGB(
                 235,
-                80,
-                80
+                85,
+                85
             )
 
     elseif statusType == "loading" then
@@ -1415,17 +1574,17 @@ local function setStatus(
         color =
             Color3.fromRGB(
                 235,
-                190,
-                70
+                195,
+                75
             )
 
     elseif statusType == "info" then
 
         color =
             Color3.fromRGB(
-                120,
-                170,
-                255
+                160,
+                160,
+                160
             )
 
     end
@@ -1451,10 +1610,13 @@ local function createButton(
 
     Button.BackgroundColor3 =
         Color3.fromRGB(
-            11,
-            11,
-            11
+            30,
+            30,
+            30
         )
+
+    Button.BackgroundTransparency =
+        0.08
 
     Button.BorderSizePixel =
         0
@@ -1476,13 +1638,16 @@ local function createButton(
 
     Button.TextColor3 =
         Color3.fromRGB(
-            220,
-            220,
-            220
+            225,
+            225,
+            225
         )
 
     Button.TextSize =
         10
+
+    Button.TextStrokeTransparency =
+        1
 
     Button.Parent =
         parent
@@ -1504,13 +1669,16 @@ local function createButton(
 
     Stroke.Color =
         Color3.fromRGB(
-            40,
-            40,
-            40
+            70,
+            70,
+            70
         )
 
     Stroke.Thickness =
         1
+
+    Stroke.Transparency =
+        0.35
 
     Stroke.Parent =
         Button
@@ -1519,15 +1687,13 @@ local function createButton(
 
         TweenService:Create(
             Button,
-            TweenInfo.new(
-                0.12
-            ),
+            TweenInfo.new(0.12),
             {
                 BackgroundColor3 =
                     Color3.fromRGB(
-                        28,
-                        28,
-                        28
+                        48,
+                        48,
+                        48
                     )
             }
         ):Play()
@@ -1538,15 +1704,13 @@ local function createButton(
 
         TweenService:Create(
             Button,
-            TweenInfo.new(
-                0.12
-            ),
+            TweenInfo.new(0.12),
             {
                 BackgroundColor3 =
                     Color3.fromRGB(
-                        11,
-                        11,
-                        11
+                        30,
+                        30,
+                        30
                     )
             }
         ):Play()
@@ -1557,15 +1721,13 @@ local function createButton(
 
         TweenService:Create(
             Button,
-            TweenInfo.new(
-                0.08
-            ),
+            TweenInfo.new(0.08),
             {
                 BackgroundColor3 =
                     Color3.fromRGB(
-                        45,
-                        45,
-                        45
+                        60,
+                        60,
+                        60
                     )
             }
         ):Play()
@@ -1598,7 +1760,7 @@ LoadButton.TextSize =
     11
 
 --==================================================
--- SECONDARY BUTTONS
+-- GET KEY / DISCORD
 --==================================================
 
 local GetKeyButton =
@@ -1638,24 +1800,14 @@ local selectedScript =
 
 local scriptButtons = {}
 
---==================================================
--- FIND SCRIPT
---==================================================
-
-local function findScriptByName(
-    name
-)
+local function findScriptByName(name)
 
     for _, scriptData
         in ipairs(Scripts)
-        do
+    do
 
-        if scriptData.Name
-            == name
-            then
-
+        if scriptData.Name == name then
             return scriptData
-
         end
 
     end
@@ -1665,15 +1817,13 @@ local function findScriptByName(
 end
 
 --==================================================
--- AUTO DETECT GAME
+-- AUTO DETECT
 --==================================================
 
 pcall(function()
 
     local detectedName =
-        PLACE_IDS[
-            game.PlaceId
-        ]
+        PLACE_IDS[game.PlaceId]
 
     if detectedName then
 
@@ -1683,10 +1833,8 @@ pcall(function()
             )
 
         if detectedScript then
-
             selectedScript =
                 detectedScript
-
         end
 
     end
@@ -1694,28 +1842,24 @@ pcall(function()
 end)
 
 --==================================================
--- UPDATE SCRIPT BUTTONS
+-- UPDATE BUTTONS
 --==================================================
 
 local function updateScriptButtons()
 
     for index, button
-        in pairs(
-            scriptButtons
-        )
-        do
+        in pairs(scriptButtons)
+    do
 
-        local isSelected =
-            Scripts[index]
+        if Scripts[index]
             == selectedScript
-
-        if isSelected then
+        then
 
             button.BackgroundColor3 =
                 Color3.fromRGB(
-                    35,
-                    35,
-                    35
+                    55,
+                    55,
+                    55
                 )
 
             local stroke =
@@ -1727,9 +1871,9 @@ local function updateScriptButtons()
 
                 stroke.Color =
                     Color3.fromRGB(
-                        125,
-                        125,
-                        125
+                        150,
+                        150,
+                        150
                     )
 
             end
@@ -1745,9 +1889,9 @@ local function updateScriptButtons()
 
             button.BackgroundColor3 =
                 Color3.fromRGB(
-                    11,
-                    11,
-                    11
+                    30,
+                    30,
+                    30
                 )
 
             local stroke =
@@ -1759,18 +1903,18 @@ local function updateScriptButtons()
 
                 stroke.Color =
                     Color3.fromRGB(
-                        40,
-                        40,
-                        40
+                        70,
+                        70,
+                        70
                     )
 
             end
 
             button.TextColor3 =
                 Color3.fromRGB(
-                    195,
-                    195,
-                    195
+                    200,
+                    200,
+                    200
                 )
 
         end
@@ -1785,7 +1929,7 @@ end
 
 for index, scriptData
     in ipairs(Scripts)
-    do
+do
 
     local button =
         createButton(
@@ -1793,11 +1937,10 @@ for index, scriptData
             scriptData.Name,
             UDim2.fromOffset(
                 8,
-                36
-                    + (
-                        (index - 1)
-                        * 51
-                    )
+                36 + (
+                    (index - 1)
+                    * 51
+                )
             ),
             UDim2.fromOffset(
                 129,
@@ -1841,7 +1984,7 @@ for index, scriptData
             sendLog(
                 scriptData.Webhook,
                 "SCRIPT_SELECTED",
-                "User selected this script.",
+                "User selected this script in the ZeHub loader.",
                 scriptData.Name
             )
 
@@ -1880,7 +2023,7 @@ GetKeyButton.MouseButton1Click:Connect(
         sendLog(
             selectedScript.Webhook,
             "GET_KEY_CLICKED",
-            "User clicked Get Key.",
+            "User clicked the Get Key button.",
             selectedScript.Name
         )
 
@@ -1920,7 +2063,7 @@ DiscordButton.MouseButton1Click:Connect(
         sendLog(
             selectedScript.Webhook,
             "DISCORD_CLICKED",
-            "User clicked Discord.",
+            "User clicked the Discord button.",
             selectedScript.Name
         )
 
@@ -1946,28 +2089,23 @@ DiscordButton.MouseButton1Click:Connect(
 )
 
 --==================================================
--- LOAD LOCK
+-- LOADING
 --==================================================
 
-local loading =
-    false
-
---==================================================
--- LOADING OVERLAY
---==================================================
+local loading = false
 
 local LoadingOverlay =
     Instance.new("Frame")
 
 LoadingOverlay.BackgroundColor3 =
     Color3.fromRGB(
-        3,
-        3,
-        3
+        5,
+        5,
+        5
     )
 
 LoadingOverlay.BackgroundTransparency =
-    0.03
+    0.08
 
 LoadingOverlay.Size =
     UDim2.fromScale(
@@ -1995,10 +2133,6 @@ LoadingCorner.CornerRadius =
 
 LoadingCorner.Parent =
     LoadingOverlay
-
---==================================================
--- LOADING TITLE
---==================================================
 
 local LoadingTitle =
     Instance.new("TextLabel")
@@ -2040,15 +2174,14 @@ LoadingTitle.TextColor3 =
 LoadingTitle.TextSize =
     20
 
+LoadingTitle.TextStrokeTransparency =
+    1
+
 LoadingTitle.ZIndex =
     51
 
 LoadingTitle.Parent =
     LoadingOverlay
-
---==================================================
--- LOADING STATUS
---==================================================
 
 local LoadingStatus =
     Instance.new("TextLabel")
@@ -2082,23 +2215,22 @@ LoadingStatus.Text =
 
 LoadingStatus.TextColor3 =
     Color3.fromRGB(
-        130,
-        130,
-        130
+        140,
+        140,
+        140
     )
 
 LoadingStatus.TextSize =
     10
+
+LoadingStatus.TextStrokeTransparency =
+    1
 
 LoadingStatus.ZIndex =
     51
 
 LoadingStatus.Parent =
     LoadingOverlay
-
---==================================================
--- LOADING BAR BACKGROUND
---==================================================
 
 local LoadingBar =
     Instance.new("Frame")
@@ -2123,9 +2255,9 @@ LoadingBar.Size =
 
 LoadingBar.BackgroundColor3 =
     Color3.fromRGB(
-        25,
-        25,
-        25
+        40,
+        40,
+        40
     )
 
 LoadingBar.BorderSizePixel =
@@ -2148,10 +2280,6 @@ LoadingBarCorner.CornerRadius =
 
 LoadingBarCorner.Parent =
     LoadingBar
-
---==================================================
--- LOADING BAR
---==================================================
 
 local LoadingProgress =
     Instance.new("Frame")
@@ -2218,11 +2346,9 @@ LoadButton.MouseButton1Click:Connect(
         end
 
         local key =
-            KeyBox.Text
-
-        key =
             tostring(
-                key or ""
+                KeyBox.Text
+                or ""
             )
 
         key =
@@ -2252,13 +2378,9 @@ LoadButton.MouseButton1Click:Connect(
 
         end
 
-        loading =
-            true
+        loading = true
 
         LoadButton.Active =
-            false
-
-        LoadButton.AutoButtonColor =
             false
 
         setStatus(
@@ -2291,7 +2413,7 @@ LoadButton.MouseButton1Click:Connect(
         end)
 
         --==================================================
-        -- FLOWAUTH URL
+        -- FLOWAUTH
         --==================================================
 
         local loaderURL =
@@ -2301,8 +2423,7 @@ LoadButton.MouseButton1Click:Connect(
 
         local source
 
-        local getSuccess,
-            getError =
+        local getSuccess =
             pcall(
                 function()
 
@@ -2317,10 +2438,9 @@ LoadButton.MouseButton1Click:Connect(
         if not getSuccess
             or not source
             or source == ""
-            then
+        then
 
-            loading =
-                false
+            loading = false
 
             LoadButton.Active =
                 true
@@ -2347,8 +2467,7 @@ LoadButton.MouseButton1Click:Connect(
 
         local loader
 
-        local compileSuccess,
-            compileError =
+        local compileSuccess =
             pcall(
                 function()
 
@@ -2363,16 +2482,15 @@ LoadButton.MouseButton1Click:Connect(
         if not compileSuccess
             or type(loader)
                 ~= "function"
-            then
+        then
 
-            loading =
-                false
+            loading = false
 
             LoadButton.Active =
                 true
 
             setStatus(
-                "● Failed to compile FlowAuth.",
+                "● Failed to load FlowAuth.",
                 "error"
             )
 
@@ -2388,13 +2506,12 @@ LoadButton.MouseButton1Click:Connect(
         end
 
         --==================================================
-        -- VALIDATE
+        -- VALIDATE KEY
         --==================================================
 
         local result
 
-        local executionSuccess,
-            executionError =
+        local executionSuccess =
             pcall(
                 function()
 
@@ -2408,8 +2525,7 @@ LoadButton.MouseButton1Click:Connect(
 
         if not executionSuccess then
 
-            loading =
-                false
+            loading = false
 
             LoadButton.Active =
                 true
@@ -2431,13 +2547,12 @@ LoadButton.MouseButton1Click:Connect(
         end
 
         --==================================================
-        -- INVALID
+        -- INVALID KEY
         --==================================================
 
         if result == false then
 
-            loading =
-                false
+            loading = false
 
             LoadButton.Active =
                 true
@@ -2459,7 +2574,7 @@ LoadButton.MouseButton1Click:Connect(
         end
 
         --==================================================
-        -- ACCEPTED
+        -- SUCCESS
         --==================================================
 
         setStatus(
@@ -2470,12 +2585,12 @@ LoadButton.MouseButton1Click:Connect(
         sendLog(
             scriptData.Webhook,
             "KEY_ACCEPTED",
-            "FlowAuth accepted the supplied key.",
+            "FlowAuth accepted the key and the script was allowed to load.",
             scriptData.Name
         )
 
         --==================================================
-        -- SHOW LOADING SCREEN
+        -- LOADING SCREEN
         --==================================================
 
         LoadingOverlay.Visible =
@@ -2559,7 +2674,7 @@ LoadButton.MouseButton1Click:Connect(
         )
 
         --==================================================
-        -- CLOSE LOADER
+        -- REMOVE LOADER
         --==================================================
 
         pcall(function()
@@ -2572,11 +2687,10 @@ LoadButton.MouseButton1Click:Connect(
 )
 
 --==================================================
--- INITIAL STATUS
+-- FINAL STATUS
 --==================================================
 
-if savedKey ~= ""
-    then
+if savedKey ~= "" then
 
     setStatus(
         "● Saved key loaded",

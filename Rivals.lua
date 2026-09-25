@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -11,51 +12,55 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local SESSION_ID = HttpService:GenerateGUID(false)
 
-local LOADER_VERSION = "v1.0.0"
+local LOADER_VERSION = "v2.0.0"
+
+local KEY_FILE = "ZeHub_Key.txt"
+
+local DISCORD = "discord.gg/zehub"
+
+local KEY_URL =
+    "https://flowauth.net/reward/95257bff957772ebbe918833738a8fea"
+
+--==================================================
+-- SCRIPTS
+--==================================================
 
 local Scripts = {
+
     {
         Name = "Loot The Forge",
         Hash = "a315f0a408a8a08b7eace4550185adcb",
 
-        -- PUT YOUR NEW ROTATED WEBHOOK HERE
-        Webhook = "https://discord.com/api/webhooks/1552817999482986607/d-oUj3_bfBiWzfIKSYjOG9hp0ZlAJS5ogsAiQteB_8HCpv0qX8lnOoFDk93Vn-qhuXYE"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     },
 
     {
         Name = "Rivals",
         Hash = "99468e8b743345db35bfac9d99632320",
 
-        -- PUT YOUR NEW ROTATED WEBHOOK HERE
-        Webhook = "https://discord.com/api/webhooks/1552818155015897111/4kTq941pwL2ZOY51VtEG6S5oZrC-KN_4hFtFfQZ7V5lddAwohdfoWXGrGibjHh898u-D"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     },
 
     {
         Name = "Runaways",
         Hash = "2f8015eedaf4c092d6afc919837270de",
 
-        -- PUT YOUR NEW ROTATED WEBHOOK HERE
-        Webhook = "https://discord.com/api/webhooks/1552818085805957163/GzYsTrGDp9UGS9sgRepAwLNL0h0Lr6EebfglR6RENzabqdqEXdb7VZdOYSwwW6jIoHcD"
+        -- USE YOUR NEW ROTATED WEBHOOK
+        Webhook = ""
     }
 }
 
-local KEY_FILE = "ZeHub_Key.txt"
-local DISCORD = "discord.gg/zehub"
-
--- Prevent accidental duplicate events
-local recentEvents = {}
-
 --==================================================
--- REQUEST FUNCTION
+-- OPTIONAL PLACE ID DETECTION
 --==================================================
 
-local function getRequestFunction()
-    return
-        (syn and syn.request)
-        or (http and http.request)
-        or http_request
-        or request
-end
+local PLACE_IDS = {
+    -- [123456789] = "Loot The Forge",
+    -- [123456789] = "Rivals",
+    -- [123456789] = "Runaways"
+}
 
 --==================================================
 -- EVENT COLOURS
@@ -94,30 +99,60 @@ local EVENT_EMOJIS = {
 }
 
 --==================================================
+-- DUPLICATE PROTECTION
+--==================================================
+
+local recentEvents = {}
+
+--==================================================
+-- REQUEST FUNCTION
+--==================================================
+
+local function getRequestFunction()
+
+    return
+        (syn and syn.request)
+        or (http and http.request)
+        or http_request
+        or request
+
+end
+
+--==================================================
 -- EVENT ID
 --==================================================
 
 local function generateEventId()
-    local guid = HttpService:GenerateGUID(false)
+
+    local guid =
+        HttpService:GenerateGUID(false)
 
     return "EVT-" .. string.upper(
         guid:gsub("-", ""):sub(1, 8)
     )
+
 end
 
 --==================================================
--- DISCORD WEBHOOK LOGGER
+-- WEBHOOK LOGGER
 --==================================================
 
-local function sendLog(webhook, eventName, details, scriptName)
+local function sendLog(
+    webhook,
+    eventName,
+    details,
+    scriptName
+)
+
     if type(webhook) ~= "string"
         or webhook == ""
         or webhook:find("YOUR_")
-        then
+    then
         return
     end
 
-    local requestFunction = getRequestFunction()
+    local requestFunction =
+        getRequestFunction()
 
     if not requestFunction then
         return
@@ -134,51 +169,77 @@ local function sendLog(webhook, eventName, details, scriptName)
         .. "|"
         .. tostring(player.UserId)
 
-    local currentTime = os.clock()
+    local currentTime =
+        os.clock()
 
     if recentEvents[duplicateKey]
-        and currentTime - recentEvents[duplicateKey] < 2
-        then
-
+        and currentTime
+            - recentEvents[duplicateKey] < 2
+    then
         return
     end
 
-    recentEvents[duplicateKey] = currentTime
+    recentEvents[duplicateKey] =
+        currentTime
 
     --==================================================
     -- PLAYER DATA
     --==================================================
 
-    local username = player.Name
-    local displayName = player.DisplayName
-    local userId = player.UserId
+    local username =
+        player.Name
 
-    local accountAge = "Unknown"
+    local displayName =
+        player.DisplayName
+
+    local userId =
+        player.UserId
+
+    local accountAge =
+        "Unknown"
 
     pcall(function()
-        accountAge = tostring(player.AccountAge) .. " days"
+
+        accountAge =
+            tostring(
+                player.AccountAge
+            )
+            .. " days"
+
     end)
 
     --==================================================
     -- GAME DATA
     --==================================================
 
-    local gameName = game.Name
-    local placeId = game.PlaceId
-    local universeId = game.GameId
-    local jobId = game.JobId
+    local gameName =
+        game.Name
+
+    local placeId =
+        game.PlaceId
+
+    local universeId =
+        game.GameId
+
+    local jobId =
+        game.JobId
 
     if jobId == "" then
-        jobId = "Studio / No Job ID"
+
+        jobId =
+            "Studio / No Job ID"
+
     end
 
     --==================================================
     -- OTHER DATA
     --==================================================
 
-    local eventId = generateEventId()
+    local eventId =
+        generateEventId()
 
-    local timestamp = os.time()
+    local timestamp =
+        os.time()
 
     local emoji =
         EVENT_EMOJIS[eventName]
@@ -199,15 +260,17 @@ local function sendLog(webhook, eventName, details, scriptName)
         .. "&width=150&height=150&format=png"
 
     --==================================================
-    -- EMBED
+    -- ORIGINAL EMBED INFORMATION
     --==================================================
 
     local payload = {
+
         username = "ZeHub Logger",
 
         avatar_url = avatarUrl,
 
         embeds = {{
+
             title =
                 emoji
                 .. " ZeHub • "
@@ -215,9 +278,15 @@ local function sendLog(webhook, eventName, details, scriptName)
 
             description =
                 "**"
-                .. tostring(scriptName or "Unknown")
+                .. tostring(
+                    scriptName
+                    or "Unknown"
+                )
                 .. "**\n"
-                .. tostring(details or "No additional details."),
+                .. tostring(
+                    details
+                    or "No additional details."
+                ),
 
             color = color,
 
@@ -232,146 +301,211 @@ local function sendLog(webhook, eventName, details, scriptName)
                 -- PLAYER
                 {
                     name = "👤 Player",
+
                     value =
                         "**"
-                        .. tostring(displayName)
+                        .. tostring(
+                            displayName
+                        )
                         .. "**\n"
                         .. "`"
-                        .. tostring(username)
+                        .. tostring(
+                            username
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "🆔 User ID",
+
                     value =
                         "`"
-                        .. tostring(userId)
+                        .. tostring(
+                            userId
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "📅 Account Age",
+
                     value =
                         "`"
-                        .. tostring(accountAge)
+                        .. tostring(
+                            accountAge
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 -- GAME
                 {
                     name = "🎮 Game",
+
                     value =
                         "`"
-                        .. tostring(gameName)
+                        .. tostring(
+                            gameName
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "📍 Place ID",
+
                     value =
                         "`"
-                        .. tostring(placeId)
+                        .. tostring(
+                            placeId
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "🌐 Universe ID",
+
                     value =
                         "`"
-                        .. tostring(universeId)
+                        .. tostring(
+                            universeId
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 -- SCRIPT
                 {
                     name = "📜 Script",
+
                     value =
                         "`"
-                        .. tostring(scriptName or "Unknown")
+                        .. tostring(
+                            scriptName
+                            or "Unknown"
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "📦 Loader Version",
+
                     value =
                         "`"
-                        .. tostring(LOADER_VERSION)
+                        .. tostring(
+                            LOADER_VERSION
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "⚡ Action",
+
                     value =
                         "`"
-                        .. tostring(eventName)
+                        .. tostring(
+                            eventName
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 -- SESSION
                 {
                     name = "🔗 Session ID",
+
                     value =
                         "`"
-                        .. tostring(SESSION_ID)
+                        .. tostring(
+                            SESSION_ID
+                        )
                         .. "`",
+
                     inline = false
                 },
 
                 {
                     name = "🖥️ Server Job ID",
+
                     value =
                         "`"
-                        .. tostring(jobId)
+                        .. tostring(
+                            jobId
+                        )
                         .. "`",
+
                     inline = false
                 },
 
                 {
                     name = "🆔 Event ID",
+
                     value =
                         "`"
-                        .. tostring(eventId)
+                        .. tostring(
+                            eventId
+                        )
                         .. "`",
+
                     inline = true
                 },
 
                 {
                     name = "🕐 Time",
+
                     value =
                         "<t:"
-                        .. tostring(timestamp)
+                        .. tostring(
+                            timestamp
+                        )
                         .. ":F>",
+
                     inline = true
                 },
 
                 {
                     name = "🔎 Profile",
+
                     value =
                         "[View Roblox Profile]("
                         .. profileUrl
                         .. ")",
+
                     inline = true
                 }
+
             },
 
             footer = {
                 text =
                     "ZeHub Logging • "
-                    .. tostring(scriptName or "Unknown")
+                    .. tostring(
+                        scriptName
+                        or "Unknown"
+                    )
             },
 
             timestamp =
-                os.date("!%Y-%m-%dT%H:%M:%SZ")
+                os.date(
+                    "!%Y-%m-%dT%H:%M:%SZ"
+                )
+
         }}
+
     }
 
     --==================================================
@@ -380,11 +514,19 @@ local function sendLog(webhook, eventName, details, scriptName)
 
     local body
 
-    local encodeSuccess = pcall(function()
-        body = HttpService:JSONEncode(payload)
-    end)
+    local encodeSuccess =
+        pcall(function()
 
-    if not encodeSuccess or not body then
+            body =
+                HttpService:JSONEncode(
+                    payload
+                )
+
+        end)
+
+    if not encodeSuccess
+        or not body
+    then
         return
     end
 
@@ -397,20 +539,24 @@ local function sendLog(webhook, eventName, details, scriptName)
         pcall(function()
 
             requestFunction({
+
                 Url = webhook,
 
                 Method = "POST",
 
                 Headers = {
-                    ["Content-Type"] = "application/json"
+                    ["Content-Type"] =
+                        "application/json"
                 },
 
                 Body = body
+
             })
 
         end)
 
     end)
+
 end
 
 --==================================================
@@ -419,7 +565,10 @@ end
 
 pcall(function()
 
-    local old = playerGui:FindFirstChild("ZeHub")
+    local old =
+        playerGui:FindFirstChild(
+            "ZeHub"
+        )
 
     if old then
         old:Destroy()
@@ -435,41 +584,71 @@ local savedKey = ""
 
 pcall(function()
 
-    if isfile and isfile(KEY_FILE) then
-        savedKey = readfile(KEY_FILE)
+    if isfile
+        and isfile(KEY_FILE)
+    then
+
+        savedKey =
+            readfile(
+                KEY_FILE
+            )
+
     end
 
 end)
 
 --==================================================
--- GUI
+-- SCREEN GUI
 --==================================================
 
-local ScreenGui = Instance.new("ScreenGui")
+local ScreenGui =
+    Instance.new("ScreenGui")
 
-ScreenGui.Name = "ZeHub"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = playerGui
+ScreenGui.Name =
+    "ZeHub"
 
-local Scale = Instance.new("UIScale")
-Scale.Parent = ScreenGui
+ScreenGui.ResetOnSpawn =
+    false
+
+ScreenGui.ZIndexBehavior =
+    Enum.ZIndexBehavior.Sibling
+
+ScreenGui.Parent =
+    playerGui
+
+--==================================================
+-- SCALE
+--==================================================
+
+local Scale =
+    Instance.new("UIScale")
+
+Scale.Parent =
+    ScreenGui
 
 local function updateScale()
 
-    local viewport =
-        workspace.CurrentCamera.ViewportSize
+    local camera =
+        workspace.CurrentCamera
 
-    local scale = math.min(
-        viewport.X / 650,
-        viewport.Y / 500
-    )
+    if not camera then
+        return
+    end
+
+    local viewport =
+        camera.ViewportSize
+
+    local scale =
+        math.min(
+            viewport.X / 720,
+            viewport.Y / 500
+        )
 
     Scale.Scale =
         math.clamp(
             scale,
             0.72,
-            1.18
+            1.15
         )
 
 end
@@ -477,21 +656,27 @@ end
 updateScale()
 
 workspace.CurrentCamera
-    :GetPropertyChangedSignal("ViewportSize")
-    :Connect(updateScale)
+    :GetPropertyChangedSignal(
+        "ViewportSize"
+    )
+    :Connect(
+        updateScale
+    )
 
 --==================================================
 -- MAIN FRAME
 --==================================================
 
-local Main = Instance.new("Frame")
+local Main =
+    Instance.new("Frame")
 
-Main.Name = "Main"
+Main.Name =
+    "Main"
 
 Main.Size =
     UDim2.fromOffset(
-        460,
-        285
+        540,
+        330
     )
 
 Main.Position =
@@ -506,15 +691,22 @@ Main.AnchorPoint =
         0.5
     )
 
+-- MORE TRANSPARENT
 Main.BackgroundColor3 =
     Color3.fromRGB(
-        0,
-        0,
-        0
+        5,
+        5,
+        5
     )
 
-Main.BorderSizePixel = 0
-Main.Parent = ScreenGui
+Main.BackgroundTransparency =
+    0.14
+
+Main.BorderSizePixel =
+    0
+
+Main.Parent =
+    ScreenGui
 
 local MainCorner =
     Instance.new("UICorner")
@@ -522,10 +714,11 @@ local MainCorner =
 MainCorner.CornerRadius =
     UDim.new(
         0,
-        10
+        12
     )
 
-MainCorner.Parent = Main
+MainCorner.Parent =
+    Main
 
 local MainStroke =
     Instance.new("UIStroke")
@@ -537,9 +730,35 @@ MainStroke.Color =
         255
     )
 
-MainStroke.Thickness = 1
-MainStroke.Transparency = 0.7
-MainStroke.Parent = Main
+MainStroke.Thickness =
+    1
+
+MainStroke.Transparency =
+    0.82
+
+MainStroke.Parent =
+    Main
+
+--==================================================
+-- TOP BAR
+--==================================================
+
+local TopBar =
+    Instance.new("Frame")
+
+TopBar.BackgroundTransparency =
+    1
+
+TopBar.Size =
+    UDim2.new(
+        1,
+        0,
+        0,
+        65
+    )
+
+TopBar.Parent =
+    Main
 
 --==================================================
 -- TITLE
@@ -548,12 +767,13 @@ MainStroke.Parent = Main
 local Title =
     Instance.new("TextLabel")
 
-Title.BackgroundTransparency = 1
+Title.BackgroundTransparency =
+    1
 
 Title.Position =
     UDim2.fromOffset(
-        18,
-        14
+        20,
+        12
     )
 
 Title.Size =
@@ -565,7 +785,8 @@ Title.Size =
 Title.Font =
     Enum.Font.GothamBold
 
-Title.Text = "ZeHub"
+Title.Text =
+    "ZeHub"
 
 Title.TextColor3 =
     Color3.fromRGB(
@@ -574,49 +795,309 @@ Title.TextColor3 =
         255
     )
 
-Title.TextSize = 22
+Title.TextSize =
+    23
+
+-- NO TEXT GLOW
+Title.TextStrokeTransparency =
+    1
 
 Title.TextXAlignment =
     Enum.TextXAlignment.Left
 
-Title.Parent = Main
+Title.Parent =
+    TopBar
+
+--==================================================
+-- SUBTITLE
+--==================================================
 
 local Subtitle =
     Instance.new("TextLabel")
 
-Subtitle.BackgroundTransparency = 1
+Subtitle.BackgroundTransparency =
+    1
 
 Subtitle.Position =
     UDim2.fromOffset(
-        19,
-        42
+        21,
+        38
     )
 
 Subtitle.Size =
     UDim2.fromOffset(
-        330,
-        20
+        350,
+        18
     )
 
 Subtitle.Font =
     Enum.Font.Gotham
 
 Subtitle.Text =
-    "Select a script and enter your key"
+    "ZeHub • Script Loader"
 
 Subtitle.TextColor3 =
     Color3.fromRGB(
-        150,
-        150,
-        150
+        130,
+        130,
+        130
     )
 
-Subtitle.TextSize = 11
+Subtitle.TextSize =
+    10
+
+Subtitle.TextStrokeTransparency =
+    1
 
 Subtitle.TextXAlignment =
     Enum.TextXAlignment.Left
 
-Subtitle.Parent = Main
+Subtitle.Parent =
+    TopBar
+
+--==================================================
+-- VERSION
+--==================================================
+
+local Version =
+    Instance.new("TextLabel")
+
+Version.BackgroundTransparency =
+    1
+
+Version.AnchorPoint =
+    Vector2.new(
+        1,
+        0
+    )
+
+Version.Position =
+    UDim2.new(
+        1,
+        -48,
+        0,
+        17
+    )
+
+Version.Size =
+    UDim2.fromOffset(
+        80,
+        18
+    )
+
+Version.Font =
+    Enum.Font.GothamMedium
+
+Version.Text =
+    LOADER_VERSION
+
+Version.TextColor3 =
+    Color3.fromRGB(
+        110,
+        110,
+        110
+    )
+
+Version.TextSize =
+    9
+
+Version.TextStrokeTransparency =
+    1
+
+Version.TextXAlignment =
+    Enum.TextXAlignment.Right
+
+Version.Parent =
+    TopBar
+
+--==================================================
+-- CLOSE BUTTON
+--==================================================
+
+local CloseButton =
+    Instance.new("TextButton")
+
+CloseButton.AnchorPoint =
+    Vector2.new(
+        1,
+        0
+    )
+
+CloseButton.Position =
+    UDim2.new(
+        1,
+        -14,
+        0,
+        14
+    )
+
+CloseButton.Size =
+    UDim2.fromOffset(
+        25,
+        25
+    )
+
+CloseButton.BackgroundColor3 =
+    Color3.fromRGB(
+        35,
+        35,
+        35
+    )
+
+CloseButton.BackgroundTransparency =
+    0.25
+
+CloseButton.BorderSizePixel =
+    0
+
+CloseButton.AutoButtonColor =
+    false
+
+CloseButton.Font =
+    Enum.Font.GothamBold
+
+CloseButton.Text =
+    "×"
+
+CloseButton.TextColor3 =
+    Color3.fromRGB(
+        220,
+        220,
+        220
+    )
+
+CloseButton.TextSize =
+    17
+
+CloseButton.TextStrokeTransparency =
+    1
+
+CloseButton.Parent =
+    TopBar
+
+local CloseCorner =
+    Instance.new("UICorner")
+
+CloseCorner.CornerRadius =
+    UDim.new(
+        0,
+        6
+    )
+
+CloseCorner.Parent =
+    CloseButton
+
+CloseButton.MouseEnter:Connect(function()
+
+    TweenService:Create(
+        CloseButton,
+        TweenInfo.new(0.15),
+        {
+            BackgroundColor3 =
+                Color3.fromRGB(
+                    65,
+                    65,
+                    65
+                )
+        }
+    ):Play()
+
+end)
+
+CloseButton.MouseLeave:Connect(function()
+
+    TweenService:Create(
+        CloseButton,
+        TweenInfo.new(0.15),
+        {
+            BackgroundColor3 =
+                Color3.fromRGB(
+                    35,
+                    35,
+                    35
+                )
+        }
+    ):Play()
+
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+
+    ScreenGui:Destroy()
+
+end)
+
+--==================================================
+-- DRAGGING
+--==================================================
+
+local dragging = false
+local dragStart
+local startPosition
+
+TopBar.InputBegan:Connect(function(input)
+
+    if input.UserInputType
+        == Enum.UserInputType.MouseButton1
+        or input.UserInputType
+        == Enum.UserInputType.Touch
+    then
+
+        dragging = true
+
+        dragStart =
+            input.Position
+
+        startPosition =
+            Main.Position
+
+        input.Changed:Connect(
+            function()
+
+                if input.UserInputState
+                    == Enum.UserInputState.End
+                then
+
+                    dragging = false
+
+                end
+
+            end
+        )
+
+    end
+
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+    if not dragging then
+        return
+    end
+
+    if input.UserInputType
+        ~= Enum.UserInputType.MouseMovement
+        and input.UserInputType
+        ~= Enum.UserInputType.Touch
+    then
+
+        return
+
+    end
+
+    local delta =
+        input.Position
+        - dragStart
+
+    Main.Position =
+        UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+
+end)
 
 --==================================================
 -- SIDEBAR
@@ -627,26 +1108,31 @@ local Sidebar =
 
 Sidebar.BackgroundColor3 =
     Color3.fromRGB(
-        8,
-        8,
-        8
+        18,
+        18,
+        18
     )
 
-Sidebar.BorderSizePixel = 0
+Sidebar.BackgroundTransparency =
+    0.16
+
+Sidebar.BorderSizePixel =
+    0
 
 Sidebar.Position =
     UDim2.fromOffset(
-        12,
+        14,
         76
     )
 
 Sidebar.Size =
     UDim2.fromOffset(
-        125,
-        194
+        145,
+        240
     )
 
-Sidebar.Parent = Main
+Sidebar.Parent =
+    Main
 
 local SidebarCorner =
     Instance.new("UICorner")
@@ -654,46 +1140,77 @@ local SidebarCorner =
 SidebarCorner.CornerRadius =
     UDim.new(
         0,
-        7
+        8
     )
 
-SidebarCorner.Parent = Sidebar
+SidebarCorner.Parent =
+    Sidebar
+
+local SidebarStroke =
+    Instance.new("UIStroke")
+
+SidebarStroke.Color =
+    Color3.fromRGB(
+        65,
+        65,
+        65
+    )
+
+SidebarStroke.Thickness =
+    1
+
+SidebarStroke.Transparency =
+    0.5
+
+SidebarStroke.Parent =
+    Sidebar
+
+--==================================================
+-- SIDEBAR TITLE
+--==================================================
 
 local SidebarTitle =
     Instance.new("TextLabel")
 
-SidebarTitle.BackgroundTransparency = 1
+SidebarTitle.BackgroundTransparency =
+    1
 
 SidebarTitle.Position =
     UDim2.fromOffset(
-        10,
-        8
+        12,
+        10
     )
 
 SidebarTitle.Size =
     UDim2.fromOffset(
-        105,
+        120,
         20
     )
 
 SidebarTitle.Font =
     Enum.Font.GothamBold
 
-SidebarTitle.Text = "SCRIPTS"
+SidebarTitle.Text =
+    "SCRIPTS"
 
 SidebarTitle.TextColor3 =
     Color3.fromRGB(
-        180,
-        180,
-        180
+        190,
+        190,
+        190
     )
 
-SidebarTitle.TextSize = 10
+SidebarTitle.TextSize =
+    10
+
+SidebarTitle.TextStrokeTransparency =
+    1
 
 SidebarTitle.TextXAlignment =
     Enum.TextXAlignment.Left
 
-SidebarTitle.Parent = Sidebar
+SidebarTitle.Parent =
+    Sidebar
 
 --==================================================
 -- CONTENT
@@ -702,26 +1219,33 @@ SidebarTitle.Parent = Sidebar
 local Content =
     Instance.new("Frame")
 
-Content.BackgroundTransparency = 1
+Content.BackgroundTransparency =
+    1
 
 Content.Position =
     UDim2.fromOffset(
-        150,
+        174,
         76
     )
 
 Content.Size =
     UDim2.fromOffset(
-        298,
-        194
+        350,
+        240
     )
 
-Content.Parent = Main
+Content.Parent =
+    Main
+
+--==================================================
+-- SELECTED LABEL
+--==================================================
 
 local SelectedLabel =
     Instance.new("TextLabel")
 
-SelectedLabel.BackgroundTransparency = 1
+SelectedLabel.BackgroundTransparency =
+    1
 
 SelectedLabel.Position =
     UDim2.fromOffset(
@@ -731,8 +1255,8 @@ SelectedLabel.Position =
 
 SelectedLabel.Size =
     UDim2.fromOffset(
-        290,
-        25
+        280,
+        27
     )
 
 SelectedLabel.Font =
@@ -745,12 +1269,69 @@ SelectedLabel.TextColor3 =
         255
     )
 
-SelectedLabel.TextSize = 15
+SelectedLabel.TextSize =
+    17
+
+SelectedLabel.TextStrokeTransparency =
+    1
 
 SelectedLabel.TextXAlignment =
     Enum.TextXAlignment.Left
 
-SelectedLabel.Parent = Content
+SelectedLabel.Parent =
+    Content
+
+--==================================================
+-- SELECTED SUBTITLE
+--==================================================
+
+local SelectedSubtitle =
+    Instance.new("TextLabel")
+
+SelectedSubtitle.BackgroundTransparency =
+    1
+
+SelectedSubtitle.Position =
+    UDim2.fromOffset(
+        0,
+        25
+    )
+
+SelectedSubtitle.Size =
+    UDim2.fromOffset(
+        300,
+        18
+    )
+
+SelectedSubtitle.Font =
+    Enum.Font.Gotham
+
+SelectedSubtitle.Text =
+    "Authentication required"
+
+SelectedSubtitle.TextColor3 =
+    Color3.fromRGB(
+        115,
+        115,
+        115
+    )
+
+SelectedSubtitle.TextSize =
+    9
+
+SelectedSubtitle.TextStrokeTransparency =
+    1
+
+SelectedSubtitle.TextXAlignment =
+    Enum.TextXAlignment.Left
+
+SelectedSubtitle.Parent =
+    Content
+
+--==================================================
+-- KEY BOX
+--==================================================
+-- Intentionally lighter than the main UI.
 
 local KeyBox =
     Instance.new("TextBox")
@@ -758,25 +1339,30 @@ local KeyBox =
 KeyBox.Position =
     UDim2.fromOffset(
         0,
-        38
+        50
     )
 
 KeyBox.Size =
     UDim2.fromOffset(
-        298,
-        39
+        350,
+        42
     )
 
 KeyBox.BackgroundColor3 =
     Color3.fromRGB(
-        8,
-        8,
-        8
+        32,
+        32,
+        32
     )
 
-KeyBox.BorderSizePixel = 0
+KeyBox.BackgroundTransparency =
+    0.08
 
-KeyBox.ClearTextOnFocus = false
+KeyBox.BorderSizePixel =
+    0
+
+KeyBox.ClearTextOnFocus =
+    false
 
 KeyBox.Font =
     Enum.Font.Gotham
@@ -786,23 +1372,50 @@ KeyBox.PlaceholderText =
 
 KeyBox.PlaceholderColor3 =
     Color3.fromRGB(
-        100,
-        100,
-        100
+        125,
+        125,
+        125
     )
 
-KeyBox.Text = savedKey
+KeyBox.Text =
+    savedKey
 
 KeyBox.TextColor3 =
     Color3.fromRGB(
-        255,
-        255,
-        255
+        245,
+        245,
+        245
     )
 
-KeyBox.TextSize = 12
+KeyBox.TextSize =
+    11
 
-KeyBox.Parent = Content
+KeyBox.TextStrokeTransparency =
+    1
+
+KeyBox.TextXAlignment =
+    Enum.TextXAlignment.Left
+
+KeyBox.Parent =
+    Content
+
+local KeyPadding =
+    Instance.new("UIPadding")
+
+KeyPadding.PaddingLeft =
+    UDim.new(
+        0,
+        13
+    )
+
+KeyPadding.PaddingRight =
+    UDim.new(
+        0,
+        13
+    )
+
+KeyPadding.Parent =
+    KeyBox
 
 local KeyCorner =
     Instance.new("UICorner")
@@ -810,23 +1423,64 @@ local KeyCorner =
 KeyCorner.CornerRadius =
     UDim.new(
         0,
-        6
+        7
     )
 
-KeyCorner.Parent = KeyBox
+KeyCorner.Parent =
+    KeyBox
 
 local KeyStroke =
     Instance.new("UIStroke")
 
 KeyStroke.Color =
     Color3.fromRGB(
-        55,
-        55,
-        55
+        75,
+        75,
+        75
     )
 
-KeyStroke.Thickness = 1
-KeyStroke.Parent = KeyBox
+KeyStroke.Thickness =
+    1
+
+KeyStroke.Transparency =
+    0.25
+
+KeyStroke.Parent =
+    KeyBox
+
+KeyBox.Focused:Connect(function()
+
+    TweenService:Create(
+        KeyStroke,
+        TweenInfo.new(0.15),
+        {
+            Color =
+                Color3.fromRGB(
+                    125,
+                    125,
+                    125
+                )
+        }
+    ):Play()
+
+end)
+
+KeyBox.FocusLost:Connect(function()
+
+    TweenService:Create(
+        KeyStroke,
+        TweenInfo.new(0.15),
+        {
+            Color =
+                Color3.fromRGB(
+                    75,
+                    75,
+                    75
+                )
+        }
+    ):Play()
+
+end)
 
 --==================================================
 -- STATUS
@@ -835,33 +1489,39 @@ KeyStroke.Parent = KeyBox
 local Status =
     Instance.new("TextLabel")
 
-Status.BackgroundTransparency = 1
+Status.BackgroundTransparency =
+    1
 
 Status.Position =
     UDim2.fromOffset(
         0,
-        82
+        97
     )
 
 Status.Size =
     UDim2.fromOffset(
-        298,
+        350,
         20
     )
 
 Status.Font =
     Enum.Font.Gotham
 
-Status.Text = "Ready."
+Status.Text =
+    "● Ready"
 
 Status.TextColor3 =
     Color3.fromRGB(
-        150,
-        150,
-        150
+        145,
+        145,
+        145
     )
 
-Status.TextSize = 10
+Status.TextSize =
+    10
+
+Status.TextStrokeTransparency =
+    1
 
 Status.TextXAlignment =
     Enum.TextXAlignment.Left
@@ -869,7 +1529,70 @@ Status.TextXAlignment =
 Status.TextTruncate =
     Enum.TextTruncate.AtEnd
 
-Status.Parent = Content
+Status.Parent =
+    Content
+
+--==================================================
+-- STATUS
+--==================================================
+
+local function setStatus(
+    text,
+    statusType
+)
+
+    Status.Text =
+        tostring(text)
+
+    local color =
+        Color3.fromRGB(
+            145,
+            145,
+            145
+        )
+
+    if statusType == "success" then
+
+        color =
+            Color3.fromRGB(
+                75,
+                220,
+                130
+            )
+
+    elseif statusType == "error" then
+
+        color =
+            Color3.fromRGB(
+                235,
+                85,
+                85
+            )
+
+    elseif statusType == "loading" then
+
+        color =
+            Color3.fromRGB(
+                235,
+                195,
+                75
+            )
+
+    elseif statusType == "info" then
+
+        color =
+            Color3.fromRGB(
+                160,
+                160,
+                160
+            )
+
+    end
+
+    Status.TextColor3 =
+        color
+
+end
 
 --==================================================
 -- BUTTON FUNCTION
@@ -887,33 +1610,47 @@ local function createButton(
 
     Button.BackgroundColor3 =
         Color3.fromRGB(
-            12,
-            12,
-            12
+            30,
+            30,
+            30
         )
 
-    Button.BorderSizePixel = 0
+    Button.BackgroundTransparency =
+        0.08
 
-    Button.Position = position
-    Button.Size = size
+    Button.BorderSizePixel =
+        0
 
-    Button.AutoButtonColor = false
+    Button.Position =
+        position
+
+    Button.Size =
+        size
+
+    Button.AutoButtonColor =
+        false
 
     Button.Font =
         Enum.Font.GothamBold
 
-    Button.Text = text
+    Button.Text =
+        text
 
     Button.TextColor3 =
         Color3.fromRGB(
-            230,
-            230,
-            230
+            225,
+            225,
+            225
         )
 
-    Button.TextSize = 10
+    Button.TextSize =
+        10
 
-    Button.Parent = parent
+    Button.TextStrokeTransparency =
+        1
+
+    Button.Parent =
+        parent
 
     local Corner =
         Instance.new("UICorner")
@@ -921,43 +1658,79 @@ local function createButton(
     Corner.CornerRadius =
         UDim.new(
             0,
-            6
+            7
         )
 
-    Corner.Parent = Button
+    Corner.Parent =
+        Button
 
     local Stroke =
         Instance.new("UIStroke")
 
     Stroke.Color =
         Color3.fromRGB(
-            45,
-            45,
-            45
+            70,
+            70,
+            70
         )
 
-    Stroke.Thickness = 1
-    Stroke.Parent = Button
+    Stroke.Thickness =
+        1
+
+    Stroke.Transparency =
+        0.35
+
+    Stroke.Parent =
+        Button
 
     Button.MouseEnter:Connect(function()
 
-        Button.BackgroundColor3 =
-            Color3.fromRGB(
-                25,
-                25,
-                25
-            )
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.12),
+            {
+                BackgroundColor3 =
+                    Color3.fromRGB(
+                        48,
+                        48,
+                        48
+                    )
+            }
+        ):Play()
 
     end)
 
     Button.MouseLeave:Connect(function()
 
-        Button.BackgroundColor3 =
-            Color3.fromRGB(
-                12,
-                12,
-                12
-            )
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.12),
+            {
+                BackgroundColor3 =
+                    Color3.fromRGB(
+                        30,
+                        30,
+                        30
+                    )
+            }
+        ):Play()
+
+    end)
+
+    Button.MouseButton1Down:Connect(function()
+
+        TweenService:Create(
+            Button,
+            TweenInfo.new(0.08),
+            {
+                BackgroundColor3 =
+                    Color3.fromRGB(
+                        60,
+                        60,
+                        60
+                    )
+            }
+        ):Play()
 
     end)
 
@@ -972,16 +1745,19 @@ end
 local LoadButton =
     createButton(
         Content,
-        "LOAD SELECTED",
+        "LOAD SCRIPT",
         UDim2.fromOffset(
             0,
-            108
+            126
         ),
         UDim2.fromOffset(
-            298,
-            35
+            350,
+            40
         )
     )
+
+LoadButton.TextSize =
+    11
 
 --==================================================
 -- GET KEY / DISCORD
@@ -993,11 +1769,11 @@ local GetKeyButton =
         "GET KEY",
         UDim2.fromOffset(
             0,
-            151
+            175
         ),
         UDim2.fromOffset(
-            142,
-            32
+            169,
+            36
         )
     )
 
@@ -1006,12 +1782,12 @@ local DiscordButton =
         Content,
         "DISCORD",
         UDim2.fromOffset(
-            156,
-            151
+            181,
+            175
         ),
         UDim2.fromOffset(
-            142,
-            32
+            169,
+            36
         )
     )
 
@@ -1024,33 +1800,121 @@ local selectedScript =
 
 local scriptButtons = {}
 
-local function setStatus(text)
+local function findScriptByName(name)
 
-    Status.Text =
-        tostring(text)
+    for _, scriptData
+        in ipairs(Scripts)
+    do
+
+        if scriptData.Name == name then
+            return scriptData
+        end
+
+    end
+
+    return nil
 
 end
 
+--==================================================
+-- AUTO DETECT
+--==================================================
+
+pcall(function()
+
+    local detectedName =
+        PLACE_IDS[game.PlaceId]
+
+    if detectedName then
+
+        local detectedScript =
+            findScriptByName(
+                detectedName
+            )
+
+        if detectedScript then
+            selectedScript =
+                detectedScript
+        end
+
+    end
+
+end)
+
+--==================================================
+-- UPDATE BUTTONS
+--==================================================
+
 local function updateScriptButtons()
 
-    for index, button in pairs(scriptButtons) do
+    for index, button
+        in pairs(scriptButtons)
+    do
 
-        if Scripts[index] == selectedScript then
+        if Scripts[index]
+            == selectedScript
+        then
 
             button.BackgroundColor3 =
                 Color3.fromRGB(
-                    35,
-                    35,
-                    35
+                    55,
+                    55,
+                    55
+                )
+
+            local stroke =
+                button:FindFirstChildOfClass(
+                    "UIStroke"
+                )
+
+            if stroke then
+
+                stroke.Color =
+                    Color3.fromRGB(
+                        150,
+                        150,
+                        150
+                    )
+
+            end
+
+            button.TextColor3 =
+                Color3.fromRGB(
+                    255,
+                    255,
+                    255
                 )
 
         else
 
             button.BackgroundColor3 =
                 Color3.fromRGB(
-                    12,
-                    12,
-                    12
+                    30,
+                    30,
+                    30
+                )
+
+            local stroke =
+                button:FindFirstChildOfClass(
+                    "UIStroke"
+                )
+
+            if stroke then
+
+                stroke.Color =
+                    Color3.fromRGB(
+                        70,
+                        70,
+                        70
+                    )
+
+            end
+
+            button.TextColor3 =
+                Color3.fromRGB(
+                    200,
+                    200,
+                    200
                 )
 
         end
@@ -1059,350 +1923,785 @@ local function updateScriptButtons()
 
 end
 
-for index, scriptData in ipairs(Scripts) do
+--==================================================
+-- CREATE SCRIPT BUTTONS
+--==================================================
+
+for index, scriptData
+    in ipairs(Scripts)
+do
 
     local button =
         createButton(
             Sidebar,
             scriptData.Name,
             UDim2.fromOffset(
-                7,
-                32 + ((index - 1) * 45)
+                8,
+                36 + (
+                    (index - 1)
+                    * 51
+                )
             ),
             UDim2.fromOffset(
-                111,
-                36
+                129,
+                42
             )
         )
+
+    button.TextSize =
+        9
 
     scriptButtons[index] =
         button
 
-    button.MouseButton1Click:Connect(function()
+    button.MouseButton1Click:Connect(
+        function()
 
-        selectedScript =
-            scriptData
+            selectedScript =
+                scriptData
 
-        SelectedLabel.Text =
-            scriptData.Name
+            SelectedLabel.Text =
+                scriptData.Name
 
-        setStatus(
-            "Selected "
-            .. scriptData.Name
-            .. "."
-        )
+            SelectedSubtitle.Text =
+                "Authentication required"
 
-        updateScriptButtons()
+            LoadButton.Text =
+                "LOAD "
+                .. string.upper(
+                    scriptData.Name
+                )
 
-        sendLog(
-            scriptData.Webhook,
-            "SCRIPT_SELECTED",
-            "User selected this script in the ZeHub loader.",
-            scriptData.Name
-        )
+            setStatus(
+                "● "
+                .. scriptData.Name
+                .. " selected",
+                "info"
+            )
 
-    end)
+            updateScriptButtons()
+
+            sendLog(
+                scriptData.Webhook,
+                "SCRIPT_SELECTED",
+                "User selected this script in the ZeHub loader.",
+                scriptData.Name
+            )
+
+        end
+    )
 
 end
+
+--==================================================
+-- INITIAL UI
+--==================================================
 
 SelectedLabel.Text =
     selectedScript.Name
 
+LoadButton.Text =
+    "LOAD "
+    .. string.upper(
+        selectedScript.Name
+    )
+
 updateScriptButtons()
-
---==================================================
--- INITIAL EXECUTION LOG
---==================================================
-
-sendLog(
-    selectedScript.Webhook,
-    "SCRIPT_EXECUTED",
-    "ZeHub loader started.",
-    selectedScript.Name
-)
 
 --==================================================
 -- GET KEY
 --==================================================
 
-GetKeyButton.MouseButton1Click:Connect(function()
+GetKeyButton.MouseButton1Click:Connect(
+    function()
 
-    setStatus(
-        "Discord link copied."
-    )
+        setStatus(
+            "● Key link copied",
+            "success"
+        )
 
-    sendLog(
-        selectedScript.Webhook,
-        "GET_KEY_CLICKED",
-        "User clicked the Get Key button.",
-        selectedScript.Name
-    )
+        sendLog(
+            selectedScript.Webhook,
+            "GET_KEY_CLICKED",
+            "User clicked the Get Key button.",
+            selectedScript.Name
+        )
 
-    pcall(function()
+        pcall(function()
 
-        if setclipboard then
+            if setclipboard then
 
-            setclipboard(DISCORD)
+                setclipboard(
+                    KEY_URL
+                )
 
-        elseif toclipboard then
+            elseif toclipboard then
 
-            toclipboard(DISCORD)
+                toclipboard(
+                    KEY_URL
+                )
 
-        end
+            end
 
-    end)
+        end)
 
-end)
+    end
+)
 
 --==================================================
 -- DISCORD
 --==================================================
 
-DiscordButton.MouseButton1Click:Connect(function()
+DiscordButton.MouseButton1Click:Connect(
+    function()
 
-    setStatus(
-        "Discord link copied."
+        setStatus(
+            "● Discord link copied",
+            "success"
+        )
+
+        sendLog(
+            selectedScript.Webhook,
+            "DISCORD_CLICKED",
+            "User clicked the Discord button.",
+            selectedScript.Name
+        )
+
+        pcall(function()
+
+            if setclipboard then
+
+                setclipboard(
+                    DISCORD
+                )
+
+            elseif toclipboard then
+
+                toclipboard(
+                    DISCORD
+                )
+
+            end
+
+        end)
+
+    end
+)
+
+--==================================================
+-- LOADING
+--==================================================
+
+local loading = false
+
+local LoadingOverlay =
+    Instance.new("Frame")
+
+LoadingOverlay.BackgroundColor3 =
+    Color3.fromRGB(
+        5,
+        5,
+        5
     )
 
-    sendLog(
-        selectedScript.Webhook,
-        "DISCORD_CLICKED",
-        "User clicked the Discord button.",
-        selectedScript.Name
+LoadingOverlay.BackgroundTransparency =
+    0.08
+
+LoadingOverlay.Size =
+    UDim2.fromScale(
+        1,
+        1
     )
 
-    pcall(function()
+LoadingOverlay.Visible =
+    false
 
-        if setclipboard then
+LoadingOverlay.ZIndex =
+    50
 
-            setclipboard(DISCORD)
+LoadingOverlay.Parent =
+    Main
 
-        elseif toclipboard then
+local LoadingCorner =
+    Instance.new("UICorner")
 
-            toclipboard(DISCORD)
+LoadingCorner.CornerRadius =
+    UDim.new(
+        0,
+        12
+    )
 
-        end
+LoadingCorner.Parent =
+    LoadingOverlay
 
-    end)
+local LoadingTitle =
+    Instance.new("TextLabel")
 
-end)
+LoadingTitle.BackgroundTransparency =
+    1
+
+LoadingTitle.AnchorPoint =
+    Vector2.new(
+        0.5,
+        0.5
+    )
+
+LoadingTitle.Position =
+    UDim2.fromScale(
+        0.5,
+        0.43
+    )
+
+LoadingTitle.Size =
+    UDim2.fromOffset(
+        400,
+        35
+    )
+
+LoadingTitle.Font =
+    Enum.Font.GothamBold
+
+LoadingTitle.Text =
+    "Loading ZeHub..."
+
+LoadingTitle.TextColor3 =
+    Color3.fromRGB(
+        255,
+        255,
+        255
+    )
+
+LoadingTitle.TextSize =
+    20
+
+LoadingTitle.TextStrokeTransparency =
+    1
+
+LoadingTitle.ZIndex =
+    51
+
+LoadingTitle.Parent =
+    LoadingOverlay
+
+local LoadingStatus =
+    Instance.new("TextLabel")
+
+LoadingStatus.BackgroundTransparency =
+    1
+
+LoadingStatus.AnchorPoint =
+    Vector2.new(
+        0.5,
+        0.5
+    )
+
+LoadingStatus.Position =
+    UDim2.fromScale(
+        0.5,
+        0.53
+    )
+
+LoadingStatus.Size =
+    UDim2.fromOffset(
+        400,
+        25
+    )
+
+LoadingStatus.Font =
+    Enum.Font.Gotham
+
+LoadingStatus.Text =
+    "Initializing..."
+
+LoadingStatus.TextColor3 =
+    Color3.fromRGB(
+        140,
+        140,
+        140
+    )
+
+LoadingStatus.TextSize =
+    10
+
+LoadingStatus.TextStrokeTransparency =
+    1
+
+LoadingStatus.ZIndex =
+    51
+
+LoadingStatus.Parent =
+    LoadingOverlay
+
+local LoadingBar =
+    Instance.new("Frame")
+
+LoadingBar.AnchorPoint =
+    Vector2.new(
+        0.5,
+        0
+    )
+
+LoadingBar.Position =
+    UDim2.fromScale(
+        0.5,
+        0.60
+    )
+
+LoadingBar.Size =
+    UDim2.fromOffset(
+        280,
+        4
+    )
+
+LoadingBar.BackgroundColor3 =
+    Color3.fromRGB(
+        40,
+        40,
+        40
+    )
+
+LoadingBar.BorderSizePixel =
+    0
+
+LoadingBar.ZIndex =
+    51
+
+LoadingBar.Parent =
+    LoadingOverlay
+
+local LoadingBarCorner =
+    Instance.new("UICorner")
+
+LoadingBarCorner.CornerRadius =
+    UDim.new(
+        1,
+        0
+    )
+
+LoadingBarCorner.Parent =
+    LoadingBar
+
+local LoadingProgress =
+    Instance.new("Frame")
+
+LoadingProgress.Size =
+    UDim2.new(
+        0,
+        0,
+        1,
+        0
+    )
+
+LoadingProgress.BackgroundColor3 =
+    Color3.fromRGB(
+        255,
+        255,
+        255
+    )
+
+LoadingProgress.BorderSizePixel =
+    0
+
+LoadingProgress.ZIndex =
+    52
+
+LoadingProgress.Parent =
+    LoadingBar
+
+local LoadingProgressCorner =
+    Instance.new("UICorner")
+
+LoadingProgressCorner.CornerRadius =
+    UDim.new(
+        1,
+        0
+    )
+
+LoadingProgressCorner.Parent =
+    LoadingProgress
 
 --==================================================
 -- LOAD SCRIPT
 --==================================================
 
-LoadButton.MouseButton1Click:Connect(function()
+LoadButton.MouseButton1Click:Connect(
+    function()
 
-    local scriptData =
-        selectedScript
+        if loading then
+            return
+        end
 
-    local key =
-        KeyBox.Text
+        local scriptData =
+            selectedScript
 
-    if not scriptData then
+        if not scriptData then
 
-        setStatus(
-            "No script selected."
-        )
-
-        return
-
-    end
-
-    if not key
-        or key:gsub("%s+", "") == ""
-        then
-
-        setStatus(
-            "Please enter your key."
-        )
-
-        sendLog(
-            scriptData.Webhook,
-            "KEY_FAILED",
-            "User attempted to load without entering a key.",
-            scriptData.Name
-        )
-
-        return
-
-    end
-
-    --==================================================
-    -- SAVE KEY
-    --==================================================
-
-    pcall(function()
-
-        if writefile then
-
-            writefile(
-                KEY_FILE,
-                key
+            setStatus(
+                "● No script selected.",
+                "error"
             )
+
+            return
 
         end
 
-    end)
+        local key =
+            tostring(
+                KeyBox.Text
+                or ""
+            )
 
-    setStatus(
-        "Validating key..."
-    )
+        key =
+            key:gsub(
+                "^%s+",
+                ""
+            ):gsub(
+                "%s+$",
+                ""
+            )
 
-    sendLog(
-        scriptData.Webhook,
-        "KEY_VALIDATION_STARTED",
-        "FlowAuth key validation started.",
-        scriptData.Name
-    )
+        if key == "" then
 
-    --==================================================
-    -- FLOWAUTH LOADER
-    --==================================================
+            setStatus(
+                "● Please enter your key.",
+                "error"
+            )
 
-    local loaderURL =
-        "https://flowauth.net/v1/loaders/"
-        .. scriptData.Hash
-        .. ".lua"
+            sendLog(
+                scriptData.Webhook,
+                "KEY_FAILED",
+                "User attempted to load without entering a key.",
+                scriptData.Name
+            )
 
-    local source
+            return
 
-    local getSuccess, getError =
+        end
+
+        loading = true
+
+        LoadButton.Active =
+            false
+
+        setStatus(
+            "● Validating key...",
+            "loading"
+        )
+
+        sendLog(
+            scriptData.Webhook,
+            "KEY_VALIDATION_STARTED",
+            "FlowAuth key validation started.",
+            scriptData.Name
+        )
+
+        --==================================================
+        -- SAVE KEY
+        --==================================================
+
         pcall(function()
 
-            source =
-                game:HttpGet(
-                    loaderURL
+            if writefile then
+
+                writefile(
+                    KEY_FILE,
+                    key
                 )
 
+            end
+
         end)
 
-    if not getSuccess
-        or not source
-        or source == ""
+        --==================================================
+        -- FLOWAUTH
+        --==================================================
+
+        local loaderURL =
+            "https://flowauth.net/v1/loaders/"
+            .. scriptData.Hash
+            .. ".lua"
+
+        local source
+
+        local getSuccess =
+            pcall(
+                function()
+
+                    source =
+                        game:HttpGet(
+                            loaderURL
+                        )
+
+                end
+            )
+
+        if not getSuccess
+            or not source
+            or source == ""
         then
 
-        setStatus(
-            "Failed to contact FlowAuth."
-        )
+            loading = false
 
-        sendLog(
-            scriptData.Webhook,
-            "LOADER_ERROR",
-            "Could not retrieve the FlowAuth loader.",
-            scriptData.Name
-        )
+            LoadButton.Active =
+                true
 
-        return
+            setStatus(
+                "● Failed to contact FlowAuth.",
+                "error"
+            )
 
-    end
+            sendLog(
+                scriptData.Webhook,
+                "LOADER_ERROR",
+                "Could not retrieve the FlowAuth loader.",
+                scriptData.Name
+            )
 
-    --==================================================
-    -- COMPILE FLOWAUTH
-    --==================================================
+            return
 
-    local loader
+        end
 
-    local compileSuccess, compileError =
-        pcall(function()
+        --==================================================
+        -- COMPILE
+        --==================================================
 
-            loader =
-                loadstring(source)
+        local loader
 
-        end)
+        local compileSuccess =
+            pcall(
+                function()
 
-    if not compileSuccess
-        or type(loader) ~= "function"
+                    loader =
+                        loadstring(
+                            source
+                        )
+
+                end
+            )
+
+        if not compileSuccess
+            or type(loader)
+                ~= "function"
         then
 
+            loading = false
+
+            LoadButton.Active =
+                true
+
+            setStatus(
+                "● Failed to load FlowAuth.",
+                "error"
+            )
+
+            sendLog(
+                scriptData.Webhook,
+                "LOADER_ERROR",
+                "FlowAuth loader could not be compiled.",
+                scriptData.Name
+            )
+
+            return
+
+        end
+
+        --==================================================
+        -- VALIDATE KEY
+        --==================================================
+
+        local result
+
+        local executionSuccess =
+            pcall(
+                function()
+
+                    result =
+                        loader(
+                            key
+                        )
+
+                end
+            )
+
+        if not executionSuccess then
+
+            loading = false
+
+            LoadButton.Active =
+                true
+
+            setStatus(
+                "● Loader error.",
+                "error"
+            )
+
+            sendLog(
+                scriptData.Webhook,
+                "LOADER_ERROR",
+                "FlowAuth loader returned an execution error.",
+                scriptData.Name
+            )
+
+            return
+
+        end
+
+        --==================================================
+        -- INVALID KEY
+        --==================================================
+
+        if result == false then
+
+            loading = false
+
+            LoadButton.Active =
+                true
+
+            setStatus(
+                "● Invalid key.",
+                "error"
+            )
+
+            sendLog(
+                scriptData.Webhook,
+                "KEY_FAILED",
+                "FlowAuth rejected the supplied key.",
+                scriptData.Name
+            )
+
+            return
+
+        end
+
+        --==================================================
+        -- SUCCESS
+        --==================================================
+
         setStatus(
-            "Failed to load FlowAuth."
+            "● Key accepted.",
+            "success"
         )
 
         sendLog(
             scriptData.Webhook,
-            "LOADER_ERROR",
-            "FlowAuth loader could not be compiled.",
+            "KEY_ACCEPTED",
+            "FlowAuth accepted the key and the script was allowed to load.",
             scriptData.Name
         )
 
-        return
+        --==================================================
+        -- LOADING SCREEN
+        --==================================================
 
-    end
+        LoadingOverlay.Visible =
+            true
 
-    --==================================================
-    -- VALIDATE KEY
-    --==================================================
+        LoadingStatus.Text =
+            "Authentication successful"
 
-    local result
+        TweenService:Create(
+            LoadingProgress,
+            TweenInfo.new(
+                0.5,
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Size =
+                    UDim2.new(
+                        0.35,
+                        0,
+                        1,
+                        0
+                    )
+            }
+        ):Play()
 
-    local executionSuccess, executionError =
+        task.wait(
+            0.35
+        )
+
+        LoadingStatus.Text =
+            "Loading "
+            .. scriptData.Name
+            .. "..."
+
+        TweenService:Create(
+            LoadingProgress,
+            TweenInfo.new(
+                0.65,
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Size =
+                    UDim2.new(
+                        0.72,
+                        0,
+                        1,
+                        0
+                    )
+            }
+        ):Play()
+
+        task.wait(
+            0.55
+        )
+
+        LoadingStatus.Text =
+            "Starting script..."
+
+        TweenService:Create(
+            LoadingProgress,
+            TweenInfo.new(
+                0.4,
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Size =
+                    UDim2.new(
+                        1,
+                        0,
+                        1,
+                        0
+                    )
+            }
+        ):Play()
+
+        task.wait(
+            0.4
+        )
+
+        --==================================================
+        -- REMOVE LOADER
+        --==================================================
+
         pcall(function()
 
-            result =
-                loader(key)
+            ScreenGui:Destroy()
 
         end)
 
-    if not executionSuccess then
-
-        setStatus(
-            "Loader error."
-        )
-
-        sendLog(
-            scriptData.Webhook,
-            "LOADER_ERROR",
-            "FlowAuth loader returned an execution error.",
-            scriptData.Name
-        )
-
-        return
-
     end
+)
 
-    --==================================================
-    -- INVALID KEY
-    --==================================================
+--==================================================
+-- FINAL STATUS
+--==================================================
 
-    if result == false then
-
-        setStatus(
-            "Invalid key."
-        )
-
-        sendLog(
-            scriptData.Webhook,
-            "KEY_FAILED",
-            "FlowAuth rejected the supplied key.",
-            scriptData.Name
-        )
-
-        return
-
-    end
-
-    --==================================================
-    -- SUCCESS
-    --==================================================
+if savedKey ~= "" then
 
     setStatus(
-        "Key accepted. Loading..."
+        "● Saved key loaded",
+        "info"
     )
 
-    sendLog(
-        scriptData.Webhook,
-        "KEY_ACCEPTED",
-        "FlowAuth accepted the key and the script was allowed to load.",
-        scriptData.Name
+else
+
+    setStatus(
+        "● Ready",
+        "info"
     )
 
-    task.wait(0.35)
-
-    pcall(function()
-
-        ScreenGui:Destroy()
-
-    end)
-
-end)
+end

@@ -19,7 +19,7 @@ local KEY_FILE = "ZeHub_Key.txt"
 local DISCORD = "discord.gg/zehub"
 
 local KEY_URL =
-    "https://flowauth.net/reward/95257bff957772ebbe918833738a8fea"
+    "discord.hg/zehub"
 
 --==================================================
 -- SCRIPTS
@@ -28,11 +28,11 @@ local KEY_URL =
 local Scripts = {
 
     {
-        Name = "Loot The Forge",
+        Name = "Loot To Forge",
         Hash = "a315f0a408a8a08b7eace4550185adcb",
 
         -- USE YOUR NEW ROTATED WEBHOOK
-        Webhook = ""
+        Webhook = "https://discord.com/api/webhooks/1552817999482986607/d-oUj3_bfBiWzfIKSYjOG9hp0ZlAJS5ogsAiQteB_8HCpv0qX8lnOoFDk93Vn-qhuXYE"
     },
 
     {
@@ -40,7 +40,7 @@ local Scripts = {
         Hash = "99468e8b743345db35bfac9d99632320",
 
         -- USE YOUR NEW ROTATED WEBHOOK
-        Webhook = ""
+        Webhook = "https://discord.com/api/webhooks/1552818155015897111/4kTq941pwL2ZOY51VtEG6S5oZrC-KN_4hFtFfQZ7V5lddAwohdfoWXGrGibjHh898u-D"
     },
 
     {
@@ -48,7 +48,7 @@ local Scripts = {
         Hash = "2f8015eedaf4c092d6afc919837270de",
 
         -- USE YOUR NEW ROTATED WEBHOOK
-        Webhook = ""
+        Webhook = "https://discord.com/api/webhooks/1552818085805957163/GzYsTrGDp9UGS9sgRepAwLNL0h0Lr6EebfglR6RENzabqdqEXdb7VZdOYSwwW6jIoHcD"
     }
 }
 

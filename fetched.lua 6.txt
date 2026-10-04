@@ -1,0 +1,408 @@
+-- Simple FireTouch Script - All Body Parts Auto-Enabled
+-- Mobile Friendly with Minimize Button
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Settings
+local ReachDistance = 10
+local FireTouchEnabled = false
+local connections = {}
+local trackedBalls = {}
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FireTouchGUI"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame (Draggable)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 250, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -60)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BackgroundTransparency = 0.15
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Corner rounding for main frame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+-- Title Label
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -10, 0, 30)
+TitleLabel.Position = UDim2.new(0, 5, 0, 5)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "⚽ FireTouch"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 18
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = MainFrame
+
+-- Minimize Button
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -35, 0, 5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+MinimizeButton.BackgroundTransparency = 0.3
+MinimizeButton.Text = "−"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 20
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Parent = MainFrame
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 6)
+MinimizeCorner.Parent = MinimizeButton
+
+-- Status Label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0, 70, 0, 25)
+StatusLabel.Position = UDim2.new(0, 10, 0, 45)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "⚪ OFF"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+StatusLabel.TextSize = 14
+StatusLabel.Font = Enum.Font.GothamSemibold
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Parent = MainFrame
+
+-- Enable/Disable Button (Toggle)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 80, 0, 30)
+ToggleButton.Position = UDim2.new(0, 10, 0, 75)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+ToggleButton.Text = "▶ START"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+ToggleButton.Font = Enum.Font.GothamSemibold
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleButton
+
+-- Distance Input Label
+local DistLabel = Instance.new("TextLabel")
+DistLabel.Size = UDim2.new(0, 60, 0, 25)
+DistLabel.Position = UDim2.new(0, 100, 0, 45)
+DistLabel.BackgroundTransparency = 1
+DistLabel.Text = "📏 Studs"
+DistLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+DistLabel.TextSize = 12
+DistLabel.Font = Enum.Font.GothamSemibold
+DistLabel.TextXAlignment = Enum.TextXAlignment.Right
+DistLabel.Parent = MainFrame
+
+-- Distance Input Box
+local DistanceBox = Instance.new("TextBox")
+DistanceBox.Size = UDim2.new(0, 60, 0, 25)
+DistanceBox.Position = UDim2.new(0, 165, 0, 45)
+DistanceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+DistanceBox.Text = "10"
+DistanceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+DistanceBox.TextSize = 14
+DistanceBox.Font = Enum.Font.GothamSemibold
+DistanceBox.PlaceholderText = "10"
+DistanceBox.ClearTextOnFocus = false
+DistanceBox.BorderSizePixel = 0
+DistanceBox.Parent = MainFrame
+
+local DistCorner = Instance.new("UICorner")
+DistCorner.CornerRadius = UDim.new(0, 6)
+DistCorner.Parent = DistanceBox
+
+-- Minimized Frame
+local MinimizedFrame = Instance.new("Frame")
+MinimizedFrame.Name = "MinimizedFrame"
+MinimizedFrame.Size = UDim2.new(0, 60, 0, 40)
+MinimizedFrame.Position = UDim2.new(0.5, -30, 0.5, -20)
+MinimizedFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MinimizedFrame.BackgroundTransparency = 0.15
+MinimizedFrame.BorderSizePixel = 0
+MinimizedFrame.Active = true
+MinimizedFrame.Draggable = true
+MinimizedFrame.Visible = false
+MinimizedFrame.Parent = ScreenGui
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 12)
+MinCorner.Parent = MinimizedFrame
+
+-- Minimized Expand Button
+local ExpandButton = Instance.new("TextButton")
+ExpandButton.Size = UDim2.new(1, 0, 1, 0)
+ExpandButton.BackgroundTransparency = 1
+ExpandButton.Text = "⚽"
+ExpandButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExpandButton.TextSize = 20
+ExpandButton.Font = Enum.Font.GothamBold
+ExpandButton.Parent = MinimizedFrame
+
+-- Find all balls function
+local function FindAllBalls()
+    trackedBalls = {}
+    
+    local tpsSystem = workspace:FindFirstChild("TPSSystem")
+    if tpsSystem then
+        local ball = tpsSystem:FindFirstChild("TPS")
+        if ball and ball:IsA("BasePart") then
+            table.insert(trackedBalls, ball)
+        end
+    end
+    
+    local practice = workspace:FindFirstChild("Practice")
+    if practice then
+        for _, child in ipairs(practice:GetChildren()) do
+            if child:IsA("BasePart") and child.Name == "PSoccerBall" then
+                table.insert(trackedBalls, child)
+            end
+        end
+    end
+    
+    -- Also check workspace directly for any other balls
+    for _, child in ipairs(workspace:GetChildren()) do
+        if child:IsA("BasePart") and (child.Name == "TPS" or child.Name == "PSoccerBall") then
+            local alreadyTracked = false
+            for _, ball in ipairs(trackedBalls) do
+                if ball == child then
+                    alreadyTracked = true
+                    break
+                end
+            end
+            if not alreadyTracked then
+                table.insert(trackedBalls, child)
+            end
+        end
+    end
+end
+
+-- Get correct leg based on UI toggle
+local function GetCorrectLeg()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    
+    local leg = char:FindFirstChild("Right Leg")
+    local gui = LocalPlayer.PlayerGui
+    if gui then
+        local startGui = gui:FindFirstChild("Start")
+        if startGui and startGui:FindFirstChild("Points") then
+            local legSwitch = startGui.Points:FindFirstChild("Leg")
+            if legSwitch and legSwitch:FindFirstChild("Switch") then
+                if legSwitch.Switch.Text == "L" then
+                    leg = char:FindFirstChild("Left Leg")
+                end
+            end
+        end
+    end
+    return leg
+end
+
+-- FireTouch function for all body parts
+local function FireTouchAll()
+    local char = LocalPlayer.Character
+    if not char then return end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    
+    -- Update balls constantly
+    FindAllBalls()
+    
+    if #trackedBalls == 0 then return end
+    
+    -- Find nearest ball
+    local nearestBall = nil
+    local nearestDist = ReachDistance
+    
+    for _, ball in ipairs(trackedBalls) do
+        if ball and ball.Parent then
+            local dist = (root.Position - ball.Position).Magnitude
+            if dist <= nearestDist then
+                nearestDist = dist
+                nearestBall = ball
+            end
+        end
+    end
+    
+    if not nearestBall then return end
+    
+    -- All body parts
+    local bodyParts = {
+        "Right Leg", "Left Leg", "Right Arm", 
+        "Left Arm", "Head", "Torso", "HumanoidRootPart"
+    }
+    
+    for _, partName in ipairs(bodyParts) do
+        local part = char:FindFirstChild(partName)
+        if part then
+            pcall(function()
+                firetouchinterest(part, nearestBall, 0)
+                firetouchinterest(part, nearestBall, 1)
+            end)
+        end
+    end
+end
+
+-- Enable FireTouch
+local function EnableFireTouch()
+    if FireTouchEnabled then return end
+    FireTouchEnabled = true
+    
+    -- Start connections for all limbs (yBloodz style - each limb gets its own loop)
+    local limbNames = {"Right Leg", "Left Leg", "Right Arm", "Left Arm", "Head", "Torso", "HumanoidRootPart"}
+    
+    for _, limbName in ipairs(limbNames) do
+        local conn = RunService.RenderStepped:Connect(function()
+            if not FireTouchEnabled then return end
+            
+            local char = LocalPlayer.Character
+            if not char then return end
+            
+            local limb = char:FindFirstChild(limbName)
+            if not limb then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+            
+            -- Update balls
+            FindAllBalls()
+            
+            if #trackedBalls == 0 then return end
+            
+            -- Find nearest ball
+            local nearestBall = nil
+            local nearestDist = ReachDistance
+            
+            for _, ball in ipairs(trackedBalls) do
+                if ball and ball.Parent then
+                    local dist = (root.Position - ball.Position).Magnitude
+                    if dist <= nearestDist then
+                        nearestDist = dist
+                        nearestBall = ball
+                    end
+                end
+            end
+            
+            if nearestBall then
+                pcall(function()
+                    firetouchinterest(limb, nearestBall, 0)
+                    firetouchinterest(limb, nearestBall, 1)
+                end)
+            end
+        end)
+        table.insert(connections, conn)
+    end
+    
+    StatusLabel.Text = "🟢 ON"
+    StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    ToggleButton.Text = "■ STOP"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+end
+
+-- Disable FireTouch
+local function DisableFireTouch()
+    FireTouchEnabled = false
+    
+    for _, conn in ipairs(connections) do
+        pcall(function()
+            conn:Disconnect()
+        end)
+    end
+    connections = {}
+    
+    StatusLabel.Text = "⚪ OFF"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    ToggleButton.Text = "▶ START"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+end
+
+-- Toggle function
+local function ToggleFireTouch()
+    if FireTouchEnabled then
+        DisableFireTouch()
+    else
+        EnableFireTouch()
+    end
+end
+
+-- Button callbacks
+ToggleButton.MouseButton1Click:Connect(ToggleFireTouch)
+
+-- Minimize functionality
+local minimized = false
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    MainFrame.Visible = not minimized
+    MinimizedFrame.Visible = minimized
+    MinimizeButton.Text = minimized and "+" or "−"
+end)
+
+ExpandButton.MouseButton1Click:Connect(function()
+    minimized = false
+    MainFrame.Visible = true
+    MinimizedFrame.Visible = false
+    MinimizeButton.Text = "−"
+end)
+
+-- Distance input
+DistanceBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local dist = tonumber(DistanceBox.Text)
+        if dist and dist > 0 then
+            ReachDistance = dist
+        else
+            DistanceBox.Text = tostring(ReachDistance)
+        end
+    end
+end)
+
+-- Auto-find balls when they appear
+workspace.DescendantAdded:Connect(function(desc)
+    if FireTouchEnabled and desc:IsA("BasePart") and (desc.Name == "TPS" or desc.Name == "PSoccerBall") then
+        local alreadyTracked = false
+        for _, ball in ipairs(trackedBalls) do
+            if ball == desc then
+                alreadyTracked = true
+                break
+            end
+        end
+        if not alreadyTracked then
+            table.insert(trackedBalls, desc)
+        end
+    end
+end)
+
+workspace.DescendantRemoved:Connect(function(desc)
+    if FireTouchEnabled and desc:IsA("BasePart") and (desc.Name == "TPS" or desc.Name == "PSoccerBall") then
+        for i, ball in ipairs(trackedBalls) do
+            if ball == desc then
+                table.remove(trackedBalls, i)
+                break
+            end
+        end
+    end
+end)
+
+-- Initial ball find
+FindAllBalls()
+
+-- Mobile touch support
+UserInputService.TouchEnabled = true
+
+-- Script loaded notification
+print("FireTouch Loaded - All body parts auto-enabled")
+
+-- Auto-start? (uncomment below to auto-start)
+-- EnableFireTouch()
